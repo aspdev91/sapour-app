@@ -55,7 +55,7 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
 
 ## Test tasks (author before implementation)
 
-## T010. Contract tests from OpenAPI [P]
+## T010. Contract tests from OpenAPI [X]
 
 - Source contracts: `/Users/mt/Documents/GitHub/sapour-app/specs/001-functional-specification-admin/contracts/openapi.yaml`
 - Generate one test file per path under `/Users/mt/Documents/GitHub/sapour-app/backend/test/contracts/` validating:
