@@ -4,7 +4,7 @@ Feature directory: `/Users/mt/Documents/GitHub/sapour-app/specs/001-functional-s
 
 Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks that touch the same file must run sequentially (no `[P]`).
 
-## T000. Monorepo workspace and CI scaffolding
+## T000. Monorepo workspace and CI scaffolding [X]
 
 - Create monorepo root files:
   - `/Users/mt/Documents/GitHub/sapour-app/package.json` (workspaces, scripts: lint, typecheck, test, build)
@@ -18,7 +18,7 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
   - `pnpm -w lint && pnpm -w typecheck && pnpm -w test`
 - Dependencies: none
 
-## T001. Backend scaffold: NestJS application
+## T001. Backend scaffold: NestJS application [X]
 
 - Create backend workspace:
   - `/Users/mt/Documents/GitHub/sapour-app/backend/package.json` (NestJS, Prisma, Zod, Sentry, Supabase, Google, OpenAI, Hume deps)

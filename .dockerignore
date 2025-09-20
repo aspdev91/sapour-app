@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+**/.env*
+*.log
+frontend/.next
+frontend/out
+backend/coverage
+coverage
+docker-data
+

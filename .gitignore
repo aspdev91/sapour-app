@@ -1,0 +1,28 @@
+# Node
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+.pnp.*
+
+# Build outputs
+dist/
+.next/
+out/
+coverage/
+
+# Env
+.env
+.env.*
+frontend/.env.local
+backend/.env
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Docker
+*.log
+docker-data/
+
