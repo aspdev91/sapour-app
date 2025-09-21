@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import IconWrapper from '@/components/IconWrapper';
 import { UploadIcon, CheckIcon, AlertCircleIcon, Loader2Icon } from 'lucide-react';
 import { apiClient, type MediaType } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -162,7 +163,7 @@ export default function NewUser() {
             htmlFor={`${type}-upload`}
             className={`cursor-pointer ${!userId ? 'opacity-50' : ''}`}
           >
-            <UploadIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <IconWrapper IconComponent={UploadIcon} className="w-8 h-8 mx-auto mb-2 text-gray-400" />
             <p className="text-sm text-gray-600">
               {!userId
                 ? 'Create user first to enable upload'
@@ -178,11 +179,11 @@ export default function NewUser() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               {upload.completed ? (
-                <CheckIcon className="w-5 h-5 text-green-500" />
+                <IconWrapper IconComponent={CheckIcon} className="w-5 h-5 text-green-500" />
               ) : upload.error ? (
-                <AlertCircleIcon className="w-5 h-5 text-red-500" />
+                <IconWrapper IconComponent={AlertCircleIcon} className="w-5 h-5 text-red-500" />
               ) : (
-                <UploadIcon className="w-5 h-5 text-blue-500" />
+                <IconWrapper IconComponent={UploadIcon} className="w-5 h-5 text-blue-500" />
               )}
               <span className="text-sm font-medium truncate max-w-48">{upload.file.name}</span>
             </div>
@@ -282,7 +283,7 @@ export default function NewUser() {
             <Button type="submit" disabled={creating}>
               {creating ? (
                 <>
-                  <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />
+                  <IconWrapper IconComponent={Loader2Icon} className="w-4 h-4 mr-2 animate-spin" />
                   Creating...
                 </>
               ) : (

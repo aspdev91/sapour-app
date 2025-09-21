@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -340,12 +340,12 @@ export default function ExperimentsList() {
             <Button type="submit" disabled={generating}>
               {generating ? (
                 <>
-                  {React.createElement(Loader2Icon, { className: 'w-4 h-4 mr-2 animate-spin' })}
+                  <IconWrapper IconComponent={Loader2Icon} className="w-4 h-4 mr-2 animate-spin" />
                   Generating Report...
                 </>
               ) : (
                 <>
-                  {React.createElement(BeakerIcon, { className: 'w-4 h-4 mr-2' })}
+                  <IconWrapper IconComponent={BeakerIcon} className="w-4 h-4 mr-2" />
                   Generate Report
                 </>
               )}
@@ -379,7 +379,7 @@ export default function ExperimentsList() {
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  {React.createElement(Icon, { className: 'w-5 h-5' })}
+                  <IconWrapper IconComponent={Icon} className="w-5 h-5" />
                   {experiment.title}
                   {experiment.needsSecondaryUser && (
                     <Badge variant="secondary" className="text-xs">
@@ -392,7 +392,7 @@ export default function ExperimentsList() {
               <CardContent>
                 <div className="flex items-center text-sm text-primary">
                   Start Experiment
-                  {React.createElement(ArrowRightIcon, { className: 'w-4 h-4 ml-2' })}
+                  <IconWrapper IconComponent={ArrowRightIcon} className="w-4 h-4 ml-2" />
                 </div>
               </CardContent>
             </Card>
