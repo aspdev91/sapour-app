@@ -43,7 +43,7 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
 - Auth allowlist enforced via backend; frontend guards routes by calling `/auth/allowlist`.
 - Dependencies: T000
 
-## T003. Environment and secrets wiring
+## T003. Environment and secrets wiring [X]
 
 - Create env files per quickstart:
   - `/Users/mt/Documents/GitHub/sapour-app/frontend/.env.local`
