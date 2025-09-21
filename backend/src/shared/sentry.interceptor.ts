@@ -40,8 +40,9 @@ export class SentryInterceptor implements NestInterceptor {
     const request = http.getRequest();
     const response = http.getResponse();
 
-    // Start performance transaction  
+    // Start performance transaction
     const transaction = Sentry.startSpan({
+      name: `${request.method} ${request.route?.path || request.url}`,
       name: `${request.method} ${request.route?.path || request.url}`,
       op: 'http',
       data: {

@@ -38,12 +38,12 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
 const SentryErrorBoundary = Sentry.withErrorBoundary(
   ({ children }: { children: React.ReactNode }) => <>{children}</>,
   {
-    fallback: DefaultErrorFallback,
+    fallback: DefaultErrorFallback as any,
     beforeCapture: (scope, error, errorInfo) => {
       scope.setTag('component', 'ErrorBoundary');
       scope.setLevel('error');
       scope.setContext('errorBoundary', {
-        componentStack: errorInfo?.componentStack || 'Unknown component stack',
+        componentStack: (errorInfo as any)?.componentStack || 'Unknown component stack',
       });
     },
   },
