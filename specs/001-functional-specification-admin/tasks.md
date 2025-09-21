@@ -2,6 +2,8 @@
 
 IMPORTANT: After each completed task on the list below, add files to Git, commit them with the task name, and push the changes
 
+NEVER use --skipLibCheck to skip fixing typescript errors
+
 Feature directory: `/Users/mt/Documents/GitHub/sapour-app/specs/001-functional-specification-admin`
 
 Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks that touch the same file must run sequentially (no `[P]`).

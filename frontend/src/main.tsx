@@ -3,10 +3,7 @@ import ReactDOM from 'react-dom/client';
 import * as Sentry from '@sentry/react';
 import {
   BrowserRouter,
-  useLocation,
-  useNavigationType,
-  createRoutesFromChildren,
-  matchRoutes,
+  // Removed unused imports to fix TypeScript errors
 } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';

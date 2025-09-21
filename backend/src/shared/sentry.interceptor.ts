@@ -43,13 +43,9 @@ export class SentryInterceptor implements NestInterceptor {
     // Start performance transaction
     const transaction = Sentry.startSpan({
       name: `${request.method} ${request.route?.path || request.url}`,
-      name: `${request.method} ${request.route?.path || request.url}`,
       op: 'http',
-      data: {
-        method: request.method,
-        url: request.url,
-        user: request.user?.email || 'anonymous',
-      },
+    }, () => {
+      // Span callback - this is the correct Sentry API
     });
 
     // Set span context (simplified for compatibility)
