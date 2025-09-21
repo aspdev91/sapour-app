@@ -1,0 +1,72 @@
+import React from 'react';
+import * as Sentry from '@sentry/react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
+}
+
+const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> = ({
+  error,
+  resetError,
+}) => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-destructive">Something went wrong</CardTitle>
+        <CardDescription>
+          An unexpected error occurred. Our team has been notified.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="text-sm text-muted-foreground font-mono bg-muted p-2 rounded">
+          {error.message}
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={resetError} variant="outline" className="flex-1">
+            Try Again
+          </Button>
+          <Button
+            onClick={() => window.location.href = '/'}
+            className="flex-1"
+          >
+            Go Home
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+const SentryErrorBoundary = Sentry.withErrorBoundary(
+  ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  {
+    fallback: DefaultErrorFallback,
+    beforeCapture: (scope, error, errorInfo) => {
+      scope.setTag('component', 'ErrorBoundary');
+      scope.setLevel('error');
+      scope.setContext('errorBoundary', {
+        componentStack: errorInfo.componentStack,
+      });
+    },
+  }
+);
+
+export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
+  children,
+  fallback: CustomFallback,
+}) => {
+  if (CustomFallback) {
+    return (
+      <Sentry.ErrorBoundary fallback={CustomFallback} showDialog>
+        {children}
+      </Sentry.ErrorBoundary>
+    );
+  }
+
+  return <SentryErrorBoundary>{children}</SentryErrorBoundary>;
+};
+
+export default ErrorBoundary;

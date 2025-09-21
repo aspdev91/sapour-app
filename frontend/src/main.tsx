@@ -1,31 +1,57 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import * as Sentry from '@sentry/react'
-import { BrowserRouter } from 'react-router-dom'
+import { 
+  BrowserRouter, 
+  useLocation, 
+  useNavigationType, 
+  createRoutesFromChildren, 
+  matchRoutes 
+} from 'react-router-dom'
 import App from './App'
+import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 
 // Initialize Sentry for error tracking
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
+  environment: import.meta.env.MODE,
   integrations: [
-    Sentry.browserTracingIntegration(),
+    Sentry.browserTracingIntegration({
+      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+        React.useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes
+      ),
+    }),
     Sentry.replayIntegration({
       maskAllText: false,
       blockAllMedia: false,
     }),
   ],
   // Performance Monitoring
-  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
+  tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
   // Session Replay
-  replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-  replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+  replaysSessionSampleRate: import.meta.env.MODE === 'production' ? 0.01 : 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  beforeSend(event) {
+    // Filter out non-critical errors in development
+    if (import.meta.env.MODE === 'development') {
+      // Skip React hydration warnings
+      if (event.message?.includes('Hydration')) return null;
+    }
+    return event;
+  },
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

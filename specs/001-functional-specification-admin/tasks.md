@@ -174,17 +174,17 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 
 ## Core tasks: backend endpoints (parallel across modules, sequential within module files)
 
-## T040. Health endpoint
+## T040. Health endpoint [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/app/app.controller.ts` GET `/health` returning 200.
 - Dependencies: T001
 
-## T041. Auth allowlist endpoint
+## T041. Auth allowlist endpoint [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/auth/auth.controller.ts` GET `/auth/allowlist` using guard and service.
 - Dependencies: T030
 
-## T042. Users endpoints (same controller file — sequential)
+## T042. Users endpoints (same controller file — sequential) [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/users/users.controller.ts`
 - Implement:
@@ -193,7 +193,7 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
   - GET `/users/{userId}` — depends T031
 - Dependencies: T031
 
-## T043. Media endpoints (same controller file — sequential)
+## T043. Media endpoints (same controller file — sequential) [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/media/media.controller.ts`
 - Implement:
@@ -201,13 +201,13 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
   - POST `/media/{mediaId}/analysis` — depends T032
 - Dependencies: T032
 
-## T044. Templates endpoints
+## T044. Templates endpoints [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/templates/templates.controller.ts`
 - Implement GET `/templates/{templateType}/revisions` — depends T033
 - Dependencies: T033
 
-## T045. Reports endpoints (same controller file — sequential)
+## T045. Reports endpoints (same controller file — sequential) [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/reports/reports.controller.ts`
 - Implement:
