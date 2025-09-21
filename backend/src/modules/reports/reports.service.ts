@@ -143,9 +143,9 @@ export class ReportsService {
       if (!reportContent) {
         throw new Error('Empty response from OpenAI');
       }
-    } catch (error) {
-      throw new InternalServerErrorException(`Failed to generate report: ${error.message}`);
-    }
+      } catch (error) {
+        throw new InternalServerErrorException(`Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
 
     // Persist immutable report with full provenance
     const report = await this.prisma.report.create({
@@ -167,7 +167,7 @@ export class ReportsService {
       id: report.id,
       reportType: report.reportType,
       primaryUserId: report.primaryUserId,
-      secondaryUserId: report.secondaryUserId,
+      secondaryUserId: report.secondaryUserId || undefined,
       templateType: report.templateType,
       templateDocumentId: report.templateDocumentId,
       templateRevisionId: report.templateRevisionId,
@@ -235,7 +235,7 @@ export class ReportsService {
       id: report.id,
       reportType: report.reportType,
       primaryUserId: report.primaryUserId,
-      secondaryUserId: report.secondaryUserId,
+      secondaryUserId: report.secondaryUserId || undefined,
       templateType: report.templateType,
       templateDocumentId: report.templateDocumentId,
       templateRevisionId: report.templateRevisionId,
@@ -260,7 +260,7 @@ export class ReportsService {
       id: report.id,
       reportType: report.reportType,
       primaryUserId: report.primaryUserId,
-      secondaryUserId: report.secondaryUserId,
+      secondaryUserId: report.secondaryUserId || undefined,
       templateType: report.templateType,
       templateDocumentId: report.templateDocumentId,
       templateRevisionId: report.templateRevisionId,

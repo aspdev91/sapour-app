@@ -119,17 +119,14 @@ export default function ExperimentsList() {
   const selectedReportType = watch('reportType');
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.getUsers({ limit: 100 });
-        setUsers(response.users);
-      } catch (error) {
-        toast.error('Failed to load users');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      const response = await apiClient.getUsers({ limit: 100 });
+      setUsers(response.users);
+    } catch (error) {
+      toast.error('Failed to load users');
+    }
+  };
 
     fetchUsers();
   }, []);

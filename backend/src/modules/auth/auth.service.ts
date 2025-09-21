@@ -78,8 +78,10 @@ export class AuthService {
         email: admin.email,
         allowlisted: admin.allowlisted,
       };
-        } catch (error) {
-            throw new Error(`Failed to check allowlist: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (error) {
+      throw new Error(
+        `Failed to check allowlist: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 

@@ -60,7 +60,9 @@ export class MediaService {
         .createSignedUploadUrl(storagePath);
 
       if (error) {
-            throw new InternalServerErrorException(`Failed to create signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new InternalServerErrorException(
+          `Failed to create signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
       }
 
       // Create media record in pending state
@@ -82,7 +84,9 @@ export class MediaService {
       if (error instanceof InternalServerErrorException) {
         throw error;
       }
-      throw new InternalServerErrorException(`Storage operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new InternalServerErrorException(
+        `Storage operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -118,10 +122,12 @@ export class MediaService {
         where: { id: mediaId },
         data: {
           status: 'failed',
-                error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : 'Unknown error',
         },
       });
-      throw new InternalServerErrorException(`Analysis trigger failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new InternalServerErrorException(
+        `Analysis trigger failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
