@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../../shared/prisma.service';
 import * as jwt from 'jsonwebtoken';
 import { JwksClient } from 'jwks-rsa';
 
@@ -11,7 +11,7 @@ export class AuthService {
     process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   );
 
-  private readonly prisma = new PrismaClient();
+  constructor(private readonly prisma: PrismaService) {}
 
   private readonly jwksClient = new JwksClient({
     jwksUri: process.env.SUPABASE_JWT_JWKS_URL || '',

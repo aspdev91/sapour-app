@@ -4,7 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../../shared/prisma.service';
 import OpenAI from 'openai';
 import { TemplatesService, TemplateType } from '../templates/templates.service';
 import { z } from 'zod';
@@ -44,10 +44,12 @@ export interface ReportDetail {
 
 @Injectable()
 export class ReportsService {
-  private readonly prisma = new PrismaClient();
   private readonly openai: OpenAI;
 
-  constructor(private readonly templatesService: TemplatesService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly templatesService: TemplatesService,
+  ) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });

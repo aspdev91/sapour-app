@@ -1,16 +1,12 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '../../src/modules/app/app.module';
+import { createTestApp } from '../test-utils';
 
 describe('OpenAPI Contract (basic status checks)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
+    const moduleRef = await createTestApp();
     app = moduleRef.createNestApplication();
     await app.init();
   });

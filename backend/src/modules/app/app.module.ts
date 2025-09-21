@@ -2,22 +2,23 @@ import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { LoggerModule } from '../../shared/logger.module';
 import { RequestIdMiddleware } from '../../shared/request-id.middleware';
+import { SharedModule } from '../../shared/shared.module';
 import { AuthModule } from '../auth/auth.module';
-import { AuthController } from '../auth/auth.controller';
-import { UsersController } from '../users/users.controller';
-import { MediaController } from '../media/media.controller';
-import { TemplatesController } from '../templates/templates.controller';
-import { ReportsController } from '../reports/reports.controller';
+import { UsersModule } from '../users/users.module';
+import { MediaModule } from '../media/media.module';
+import { TemplatesModule } from '../templates/templates.module';
+import { ReportsModule } from '../reports/reports.module';
 
 @Module({
-  controllers: [
-    AppController,
-    AuthController,
-    UsersController,
-    MediaController,
-    TemplatesController,
-    ReportsController,
+  controllers: [AppController],
+  imports: [
+    LoggerModule,
+    SharedModule,
+    AuthModule,
+    UsersModule,
+    MediaModule,
+    TemplatesModule,
+    ReportsModule,
   ],
-  imports: [AuthModule],
 })
 export class AppModule {}

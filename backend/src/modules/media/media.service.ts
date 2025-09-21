@@ -4,7 +4,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../../shared/prisma.service';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
@@ -24,7 +24,7 @@ export interface SignedUrlResponse {
 
 @Injectable()
 export class MediaService {
-  private readonly prisma = new PrismaClient();
+  constructor(private readonly prisma: PrismaService) {}
   private readonly supabase = createClient(
     process.env.SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || '',

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../../shared/prisma.service';
 import { z } from 'zod';
 
 const CreateUserSchema = z.object({
@@ -42,7 +42,7 @@ export interface UserDetail {
 
 @Injectable()
 export class UsersService {
-  private readonly prisma = new PrismaClient();
+  constructor(private readonly prisma: PrismaService) {}
 
   async listUsers(cursor?: string, limit = 20): Promise<PaginatedUsers> {
     if (limit < 1 || limit > 100) {
