@@ -60,7 +60,7 @@ export class MediaService {
         .createSignedUploadUrl(storagePath);
 
       if (error) {
-        throw new InternalServerErrorException(`Failed to create signed URL: ${error.message}`);
+            throw new InternalServerErrorException(`Failed to create signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
 
       // Create media record in pending state
@@ -82,7 +82,7 @@ export class MediaService {
       if (error instanceof InternalServerErrorException) {
         throw error;
       }
-      throw new InternalServerErrorException(`Storage operation failed: ${error.message}`);
+      throw new InternalServerErrorException(`Storage operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -118,10 +118,10 @@ export class MediaService {
         where: { id: mediaId },
         data: {
           status: 'failed',
-          error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
         },
       });
-      throw new InternalServerErrorException(`Analysis trigger failed: ${error.message}`);
+      throw new InternalServerErrorException(`Analysis trigger failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -156,7 +156,7 @@ export class MediaService {
           where: { id: mediaId },
           data: {
             status: 'failed',
-            error: `Image analysis failed: ${error.message}`,
+            error: `Image analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           },
         });
       }
@@ -201,7 +201,7 @@ export class MediaService {
           where: { id: mediaId },
           data: {
             status: 'failed',
-            error: `Audio analysis failed: ${error.message}`,
+            error: `Audio analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           },
         });
       }

@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { JwksClient } from 'jwks-rsa';
 
 @Injectable()
@@ -78,8 +78,8 @@ export class AuthService {
         email: admin.email,
         allowlisted: admin.allowlisted,
       };
-    } catch (error) {
-      throw new Error(`Failed to check allowlist: ${error.message}`);
+        } catch (error) {
+            throw new Error(`Failed to check allowlist: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

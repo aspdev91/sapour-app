@@ -30,8 +30,8 @@ export class SupabaseJwtGuard implements CanActivate {
       });
 
       return true;
-    } catch (error) {
-      throw new UnauthorizedException(error.message || 'Authentication failed');
+        } catch (error) {
+            throw new UnauthorizedException(error instanceof Error ? error.message : 'Authentication failed');
     }
   }
 }

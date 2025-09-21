@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -102,7 +101,6 @@ export default function ExperimentsList() {
   const [selectedExperiment, setSelectedExperiment] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [revisions, setRevisions] = useState<TemplateRevision[]>([]);
-  const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   const preselectedUserId = searchParams.get('userId');
@@ -234,7 +232,7 @@ export default function ExperimentsList() {
               <div className="space-y-2">
                 <Label htmlFor="primaryUserId">User</Label>
                 <Select
-                  onValueChange={(value) => setValue('primaryUserId', value)}
+                  onValueChange={(value: string) => setValue('primaryUserId', value)}
                   defaultValue={preselectedUserId || undefined}
                 >
                   <SelectTrigger className={errors.primaryUserId ? 'border-red-500' : ''}>
@@ -264,7 +262,7 @@ export default function ExperimentsList() {
               <CardContent>
                 <div className="space-y-2">
                   <Label htmlFor="secondaryUserId">User</Label>
-                  <Select onValueChange={(value) => setValue('secondaryUserId', value)}>
+                  <Select onValueChange={(value: string) => setValue('secondaryUserId', value)}>
                     <SelectTrigger className={errors.secondaryUserId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select a user" />
                     </SelectTrigger>
@@ -292,7 +290,7 @@ export default function ExperimentsList() {
             <CardContent>
               <div className="space-y-2">
                 <Label htmlFor="templateRevisionId">Template Revision</Label>
-                <Select onValueChange={(value) => setValue('templateRevisionId', value)}>
+                <Select onValueChange={(value: string) => setValue('templateRevisionId', value)}>
                   <SelectTrigger className={errors.templateRevisionId ? 'border-red-500' : ''}>
                     <SelectValue placeholder="Select template version" />
                   </SelectTrigger>
