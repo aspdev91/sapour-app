@@ -32,15 +32,15 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
 - Commands: `pnpm --filter backend dev`, `pnpm --filter backend test`
 - Dependencies: T000
 
-## T002. Frontend scaffold: Next.js 15 (App Router)
+## T002. Frontend scaffold: Vite + React
 
 - Create frontend workspace:
-  - `/Users/mt/Documents/GitHub/sapour-app/frontend/package.json` (Next.js 15, React 19, Tailwind, Shadcn, tRPC, Sentry)
+  - `/Users/mt/Documents/GitHub/sapour-app/frontend/package.json` (Vite 5, React 19, Tailwind, Shadcn, Sentry)
   - `/Users/mt/Documents/GitHub/sapour-app/frontend/Dockerfile`
-  - `/Users/mt/Documents/GitHub/sapour-app/frontend/tailwind.config.ts`, `postcss.config.js`, `src/app/layout.tsx`, `src/app/page.tsx`
+  - `/Users/mt/Documents/GitHub/sapour-app/frontend/tailwind.config.ts`, `postcss.config.js`, `src/main.tsx`, `src/App.tsx`, `src/routes/*`
   - Configure Shadcn UI and Tailwind tokens
-  - Add tRPC BFF in Next app that proxies to backend
-- Add middleware to enforce Supabase Auth allowlist.
+  - Add React Router with routes for Users, Experiments, Reports
+- Auth allowlist enforced via backend; frontend guards routes by calling `/auth/allowlist`.
 - Dependencies: T000
 
 ## T003. Environment and secrets wiring
@@ -222,7 +222,7 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 ## T050. Sentry instrumentation (backend and frontend) [P]
 
 - Backend: `@sentry/node` setup, performance tracing, error interceptor.
-- Frontend: `@sentry/nextjs` setup.
+- Frontend: `@sentry/react` with Vite integration.
 - Dependencies: T001, T002
 
 ## T051. Structured logging and request ids (backend) [P]
@@ -230,47 +230,47 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 - Add a logger module with request id middleware; log key events.
 - Dependencies: T001
 
-## T052. tRPC BFF in Next.js [P]
+## T052. Typed REST client for frontend [P]
 
-- Add `/Users/mt/Documents/GitHub/sapour-app/frontend/src/server/trpc/` with routers calling backend REST.
-- Generate typed clients consumed by frontend pages/components.
+- Generate a typed client (OpenAPI client or zodios) from `/contracts/openapi.yaml` for frontend consumption.
+- Replace direct fetches with typed client calls.
 - Dependencies: T002, T041–T045
 
 ---
 
-## Frontend core (App Router)
+## Frontend core (Vite + React Router)
 
 ## T060. App shell and navigation
 
-- Files under `/Users/mt/Documents/GitHub/sapour-app/frontend/src/app/` with Shadcn UI layout and nav to Users and Experiments.
+- Files under `/Users/mt/Documents/GitHub/sapour-app/frontend/src/` with Shadcn UI layout and nav (React Router) to Users and Experiments.
 - Dependencies: T002
 
 ## T061. Users list with infinite scroll
 
-- Page: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/app/users/page.tsx`
-- Calls tRPC → backend GET `/users`.
+- Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/users/UsersList.tsx`
+- Calls typed REST client → backend GET `/users`.
 - Dependencies: T052
 
 ## T062. Add New User with media upload
 
-- Page: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/app/users/new/page.tsx`
+- Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/users/NewUser.tsx`
 - Uses signed URL flow for image/audio upload.
 - Dependencies: T052
 
 ## T063. User profile (media gallery, audio player, reports list)
 
-- Page: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/app/users/[userId]/page.tsx`
+- Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/users/UserDetail.tsx`
 - Dependencies: T052
 
 ## T064. Experiments pages (First Impression, My Type, Compatibility)
 
-- Pages under `/Users/mt/Documents/GitHub/sapour-app/frontend/src/app/experiments/`
+- Routes under `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/experiments/`
 - Allow selecting template revision and generating report.
 - Dependencies: T052
 
 ## T065. Report viewer (read-only with provenance)
 
-- Page: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/app/reports/[reportId]/page.tsx`
+- Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/reports/ReportViewer.tsx`
 - Dependencies: T052
 
 ---
@@ -307,8 +307,8 @@ When dependencies are satisfied, you can run these groups in parallel:
 
 - Group A [P]: T011, T012, T013, T014, T015 (integration/E2E tests)
 - Group B [P]: T031, T032, T033, T034 (backend services by module)
-- Group C [P]: T044, T050, T051, T052 (templates endpoint, instrumentation, logging, tRPC)
-- Group D [P]: T061, T062, T064, T065 (frontend pages)
+- Group C [P]: T044, T050, T051, T052 (templates endpoint, instrumentation, logging, typed REST client)
+- Group D [P]: T061, T062, T064, T065 (frontend routes)
 
 Example commands:
 

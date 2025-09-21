@@ -19,7 +19,11 @@ describe('Contract: /media', () => {
   it('POST /media/signed-url -> 201', async () => {
     await request(app.getHttpServer())
       .post('/media/signed-url')
-      .send({ userId: '00000000-0000-0000-0000-000000000000', type: 'image', contentType: 'image/png' })
+      .send({
+        userId: '00000000-0000-0000-0000-000000000000',
+        type: 'image',
+        contentType: 'image/png',
+      })
       .expect(201);
   });
 
@@ -28,5 +32,3 @@ describe('Contract: /media', () => {
     await request(app.getHttpServer()).post(`/media/${mediaId}/analysis`).expect(202);
   });
 });
-
-

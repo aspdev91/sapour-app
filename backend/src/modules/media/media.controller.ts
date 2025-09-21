@@ -6,11 +6,15 @@ export class MediaController {
   @HttpCode(201)
   signedUrl(
     @Body()
-    body: { userId: string; type: 'image' | 'audio'; contentType: string },
+    body: {
+      userId: string;
+      type: 'image' | 'audio';
+      contentType: string;
+    },
   ) {
     return {
       uploadUrl: 'https://storage.supabase.fake/upload',
-      storagePath: `uploads/${body.userId}/file` ,
+      storagePath: `uploads/${body.userId}/file`,
     };
   }
 

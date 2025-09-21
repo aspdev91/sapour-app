@@ -14,13 +14,13 @@
 
 Create `.env` files:
 
-Frontend (`frontend/.env.local`):
+Frontend (`frontend/.env`):
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_SENTRY_DSN=...
-NEXT_PUBLIC_TRPC_URL=/api/trpc
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_SENTRY_DSN=...
+VITE_BACKEND_BASE_URL=http://localhost:3001
 ```
 
 Backend (`backend/.env`):
@@ -52,7 +52,7 @@ Frontend: http://localhost:3000 Backend: http://localhost:3001
 
 ```
 pnpm -w install
-pnpm -w dev
+pnpm --filter frontend dev & pnpm --filter backend dev & wait
 ```
 
 ## Generate & Validate

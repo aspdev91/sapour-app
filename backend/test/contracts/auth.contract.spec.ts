@@ -25,5 +25,3 @@ describe('Contract: GET /auth/allowlist', () => {
     expect(res.body).toHaveProperty('allowlisted');
   });
 });
-
-

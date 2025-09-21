@@ -9,3 +9,14 @@ datasource db {
 
 // Models will be added in tasks T020–T024
 
+model Admin {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  allowlisted   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  lastActiveAt  DateTime?
+
+  // Relations
+  createdUsers  User[]   @relation("AdminCreatedUsers")
+}
+

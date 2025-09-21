@@ -4,10 +4,7 @@ import { Body, Controller, Get, Param, Post, Query, HttpCode } from '@nestjs/com
 export class UsersController {
   @Get()
   @HttpCode(200)
-  list(
-    @Query('cursor') cursor?: string,
-    @Query('limit') limit?: string,
-  ) {
+  list(@Query('cursor') cursor?: string, @Query('limit') limit?: string) {
     return { items: [], nextCursor: null };
   }
 

@@ -30,5 +30,3 @@ describe('OpenAPI Contract (basic status checks)', () => {
       .expect(200);
   });
 });
-
-

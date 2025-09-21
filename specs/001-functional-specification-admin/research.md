@@ -2,11 +2,11 @@
 
 ## Resolved Unknowns & Decisions
 
-### Frontend framework (Next.js vs Vite SPA)
+### Frontend framework (Vite SPA vs Next.js)
 
-- Decision: Next.js 15 (App Router) with React 18
-- Rationale: Server Components, routing, image optimization, strong ecosystem, easy auth middleware, good DX
-- Alternatives: Vite + React SPA rejected (duplicative infra, less SSR/SEO benefits, more manual plumbing)
+- Decision: Vite 5 + React 19 (SPA) with React Router
+- Rationale: Lower complexity for internal admin app, faster builds/HMR, simpler mental model; no SSR/SEO needs; fewer framework-specific pitfalls
+- Alternatives: Next.js rejected (unnecessary complexity for our use case; middleware/SSR not required)
 
 ### UI system
 
@@ -14,11 +14,11 @@
 - Rationale: Consistent, accessible component library with Tailwind tokens; meets constitution UX gate
 - Alternatives: MUI/Chakra rejected (heavier, less alignment with Tailwind stack preference)
 
-### API architecture (NestJS vs Next API + tRPC-only)
+### API architecture (NestJS REST + Typed client)
 
-- Decision: NestJS TypeScript backend exposing REST endpoints validated with Zod; Next.js hosts a tRPC BFF that proxies to Nest endpoints
-- Rationale: Preserve Nest strength (modules, guards, DI) for integrations (Supabase, Google, Hume, OpenAI). tRPC provides typed client boundary in frontend
-- Alternatives: Next API routes only rejected (integration complexity grows). Pure tRPC backend rejected (smaller ecosystem than Nest)
+- Decision: NestJS TypeScript backend exposing REST endpoints validated with Zod; frontend consumes via generated typed client from OpenAPI
+- Rationale: Strong modular backend; typed safety at the boundary without maintaining a BFF; fewer moving parts
+- Alternatives: tRPC/BFF rejected (additional layer not justified)
 
 ### Database & ORM
 
@@ -26,9 +26,9 @@
 - Rationale: Managed Postgres with Prisma developer velocity; compatible with Supabase Auth and Storage
 - Alternatives: Direct Supabase SQL or Drizzle rejected (team familiarity, Prisma tooling preferred)
 
-### Auth strategy
+- ### Auth strategy
 
-- Decision: Supabase Auth (email allowlist). Frontend enforces via Next middleware; Backend verifies JWT via Supabase JWKS and checks allowlist table
+- Decision: Supabase Auth (email allowlist). Frontend performs route guard via REST call to `/auth/allowlist`; Backend verifies JWT via Supabase JWKS and checks allowlist table
 - Rationale: Centralized auth, minimal custom logic; constitution security hygiene
 - Alternatives: Custom auth rejected
 

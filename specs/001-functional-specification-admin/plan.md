@@ -28,12 +28,12 @@
 
 ## Summary
 
-Build an internal admin-only web application to upload user media (images/audio), perform AI analyses, fetch Google Docs template revisions, and generate immutable personality and compatibility reports with clear provenance. Technical approach: Next.js (React) frontend with Shadcn UI and Tailwind; NestJS TypeScript backend using Prisma against Supabase Postgres and Supabase Storage; Google Docs/Drive APIs for revisioned templates; Hume.ai for voice analysis; OpenAI for image analysis and report generation; Supabase Auth allowlist; Sentry for observability; Dockerized services; comprehensive tests (Jest/RTL/Playwright) and linting/formatting gates.
+Build an internal admin-only web application to upload user media (images/audio), perform AI analyses, fetch Google Docs template revisions, and generate immutable personality and compatibility reports with clear provenance. Technical approach: Vite (React) frontend with Tailwind and Shadcn UI; NestJS TypeScript backend using Prisma against Supabase Postgres and Supabase Storage; Google Docs/Drive APIs for revisioned templates; Hume.ai for voice analysis; OpenAI for image analysis and report generation; Supabase Auth allowlist; Sentry for observability; Dockerized services; comprehensive tests (Jest/RTL/Playwright) and linting/formatting gates.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x; Node.js 24.x; React 19; Next.js 15 (App Router)  
-**Primary Dependencies**: Next.js, React, Shadcn UI, Tailwind CSS, tRPC (BFF), NestJS, Prisma, Zod, Supabase JS, @sentry/nextjs, @sentry/node, Google APIs (docs/drive), Hume SDK, OpenAI SDK  
+**Language/Version**: TypeScript 5.x; Node.js 24.x; React 19; Vite 5  
+**Primary Dependencies**: Vite, React, React Router, Shadcn UI, Tailwind CSS, NestJS, Prisma, Zod, Supabase JS, @sentry/react, @sentry/node, Google APIs (docs/drive), Hume SDK, OpenAI SDK  
 **Storage**: Supabase Postgres (via Prisma), Supabase Storage (images/audio)  
 **Testing**: Jest + React Testing Library; Playwright for E2E; ESLint + Prettier  
 **Target Platform**: Web application (frontend + backend) in Docker containers  
@@ -80,12 +80,12 @@ backend/
 frontend/
 ├── src/
 │   ├── components/
-│   ├── app/ (Next.js App Router)
+│   ├── routes/ (React Router route components)
 │   └── services/
 └── tests/
 ```
 
-**Structure Decision**: Option 2 (web) — Next.js frontend and NestJS backend
+**Structure Decision**: Option 2 (web) — Vite + React frontend and NestJS backend
 
 ## Phase 0: Outline & Research
 
@@ -114,9 +114,9 @@ _These phases are beyond the scope of the /plan command_
 
 ## Complexity Tracking
 
-| Violation                                  | Why Needed                                                                                                    | Simpler Alternative Rejected Because                                                                                                                  |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dual backend/BFF (Next.js + NestJS + tRPC) | Separate concerns: UI rendering (Next) vs API orchestration/integrations (Nest); typed client boundary (tRPC) | Single Next API routes: weaker modularity, less suitable for structured services/integrations; tRPC-only backend: loses Nest ecosystem (pipes/guards) |
+| Violation                              | Why Needed                                                 | Simpler Alternative Rejected Because                                                            |
+| -------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Separate frontend and backend (no BFF) | Keep UI thin; call backend REST directly with typed client | Bundling UI and API together increases coupling; BFF adds overhead not needed for internal tool |
 
 ## Progress Tracking
 
