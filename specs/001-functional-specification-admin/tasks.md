@@ -32,7 +32,7 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
 - Commands: `pnpm --filter backend dev`, `pnpm --filter backend test`
 - Dependencies: T000
 
-## T002. Frontend scaffold: Vite + React
+## T002. Frontend scaffold: Vite + React [X]
 
 - Create frontend workspace:
   - `/Users/mt/Documents/GitHub/sapour-app/frontend/package.json` (Vite 5, React 19, Tailwind, Shadcn, Sentry)
