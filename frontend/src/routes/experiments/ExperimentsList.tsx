@@ -114,7 +114,7 @@ export default function ExperimentsList() {
     reset,
     formState: { errors },
   } = useForm<ExperimentForm>({
-    resolver: zodResolver(experimentSchema),
+    resolver: zodResolver(experimentSchema as any) as any,
   });
 
   const selectedReportType = watch('reportType');

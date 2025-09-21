@@ -53,7 +53,7 @@ export default function NewUser() {
     handleSubmit,
     formState: { errors },
   } = useForm<CreateUserForm>({
-    resolver: zodResolver(createUserSchema),
+    resolver: zodResolver(createUserSchema as any) as any,
   });
 
   const handleFileUpload = async (file: File, type: MediaType, setState: typeof setImageUpload) => {
@@ -158,7 +158,10 @@ export default function NewUser() {
             className="hidden"
             disabled={!userId}
           />
-          <Label htmlFor={`${type}-upload`} className={`cursor-pointer ${!userId ? 'opacity-50' : ''}`}>
+          <Label
+            htmlFor={`${type}-upload`}
+            className={`cursor-pointer ${!userId ? 'opacity-50' : ''}`}
+          >
             <UploadIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
             <p className="text-sm text-gray-600">
               {!userId
