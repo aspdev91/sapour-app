@@ -118,7 +118,7 @@ export class UsersService {
       consent: user.consent,
       createdAt: user.createdAt,
       createdByAdminId: user.createdByAdminId,
-      media: user.media.map(media => ({
+      media: user.media.map((media) => ({
         ...media,
         publicUrl: media.publicUrl || undefined,
       })),
@@ -162,7 +162,7 @@ export class UsersService {
       consent: user.consent,
       createdAt: user.createdAt,
       createdByAdminId: user.createdByAdminId,
-      media: user.media.map(media => ({
+      media: user.media.map((media) => ({
         ...media,
         publicUrl: media.publicUrl || undefined,
       })),

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import IconWrapper from '@/components/IconWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -211,7 +212,7 @@ export default function ExperimentsList() {
               <CardTitle className="flex items-center gap-2">
                 {selectedExperimentData && (
                   <>
-                    {React.createElement(selectedExperimentData.icon, { className: "w-5 h-5" })}
+                    <IconWrapper IconComponent={selectedExperimentData.icon} className="w-5 h-5" />
                     {selectedExperimentData.title}
                   </>
                 )}
@@ -339,12 +340,12 @@ export default function ExperimentsList() {
             <Button type="submit" disabled={generating}>
               {generating ? (
                 <>
-                  {React.createElement(Loader2Icon, { className: "w-4 h-4 mr-2 animate-spin" })}
+                  {React.createElement(Loader2Icon, { className: 'w-4 h-4 mr-2 animate-spin' })}
                   Generating Report...
                 </>
               ) : (
                 <>
-                  {React.createElement(BeakerIcon, { className: "w-4 h-4 mr-2" })}
+                  {React.createElement(BeakerIcon, { className: 'w-4 h-4 mr-2' })}
                   Generate Report
                 </>
               )}
@@ -378,7 +379,7 @@ export default function ExperimentsList() {
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  {React.createElement(Icon, { className: "w-5 h-5" })}
+                  {React.createElement(Icon, { className: 'w-5 h-5' })}
                   {experiment.title}
                   {experiment.needsSecondaryUser && (
                     <Badge variant="secondary" className="text-xs">
@@ -391,7 +392,7 @@ export default function ExperimentsList() {
               <CardContent>
                 <div className="flex items-center text-sm text-primary">
                   Start Experiment
-                  {React.createElement(ArrowRightIcon, { className: "w-4 h-4 ml-2" })}
+                  {React.createElement(ArrowRightIcon, { className: 'w-4 h-4 ml-2' })}
                 </div>
               </CardContent>
             </Card>
