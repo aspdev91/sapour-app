@@ -10,9 +10,9 @@ export class AuthService {
     process.env.SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   );
-  
+
   private readonly prisma = new PrismaClient();
-  
+
   private readonly jwksClient = new JwksClient({
     jwksUri: process.env.SUPABASE_JWT_JWKS_URL || '',
     rateLimit: true,
@@ -35,7 +35,7 @@ export class AuthService {
 
       // Verify JWT
       const decodedToken = jwt.verify(token, signingKey) as any;
-      
+
       if (!decodedToken.email || !decodedToken.sub) {
         throw new Error('Invalid token payload');
       }
@@ -83,14 +83,14 @@ export class AuthService {
     }
   }
 
-  async verifyTokenAndCheckAllowlist(token: string): Promise<{ 
-    email: string; 
-    userId: string; 
+  async verifyTokenAndCheckAllowlist(token: string): Promise<{
+    email: string;
+    userId: string;
     allowlisted: boolean;
   }> {
     const user = await this.verifyJwtAndGetUser(token);
     const allowlistStatus = await this.checkAllowlist(user.email);
-    
+
     if (!allowlistStatus.allowlisted) {
       throw new UnauthorizedException('User not in allowlist');
     }
