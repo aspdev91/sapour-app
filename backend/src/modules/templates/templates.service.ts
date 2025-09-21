@@ -4,11 +4,11 @@ import { z } from 'zod';
 
 const TemplateTypeSchema = z.enum([
   'first_impression',
-  'first_impression_divergence', 
+  'first_impression_divergence',
   'my_type',
   'my_type_divergence',
   'romance_compatibility',
-  'friendship_compatibility'
+  'friendship_compatibility',
 ]);
 
 export type TemplateType = z.infer<typeof TemplateTypeSchema>;
@@ -27,7 +27,10 @@ export interface TemplateRevisionsResponse {
 export class TemplatesService {
   private readonly docs;
   private readonly templateDocIds: Record<TemplateType, string>;
-  private readonly revisionsCache = new Map<string, { data: TemplateRevision[], timestamp: number }>();
+  private readonly revisionsCache = new Map<
+    string,
+    { data: TemplateRevision[]; timestamp: number }
+  >();
   private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   constructor() {
@@ -42,7 +45,7 @@ export class TemplatesService {
     });
 
     this.docs = google.docs({ version: 'v1', auth });
-    
+
     // Parse template document IDs from environment
     try {
       const templateIds = JSON.parse(process.env.GOOGLE_TEMPLATES_DOC_IDS_JSON || '{}');
@@ -69,7 +72,7 @@ export class TemplatesService {
   async getTemplateRevisions(templateType: string): Promise<TemplateRevisionsResponse> {
     const validatedTemplateType = TemplateTypeSchema.parse(templateType);
     const documentId = this.templateDocIds[validatedTemplateType];
-    
+
     if (!documentId) {
       throw new BadRequestException(`Template type ${templateType} not configured`);
     }
@@ -83,7 +86,7 @@ export class TemplatesService {
     try {
       // Use Google Drive API to get revisions
       const drive = google.drive({ version: 'v3', auth: this.docs.context._options.auth });
-      
+
       const revisionsResponse = await drive.revisions.list({
         fileId: documentId,
         fields: 'revisions(id,modifiedTime,lastModifyingUser)',
@@ -110,9 +113,9 @@ export class TemplatesService {
         await this.delay(1000 + Math.random() * 2000); // 1-3 second delay
         return this.getTemplateRevisions(templateType); // Retry once
       }
-      
+
       throw new InternalServerErrorException(
-        `Failed to fetch template revisions: ${error.message}`
+        `Failed to fetch template revisions: ${error.message}`,
       );
     }
   }
@@ -126,13 +129,13 @@ export class TemplatesService {
       hour: '2-digit',
       minute: '2-digit',
     });
-    
+
     const author = revision.lastModifyingUser?.displayName || 'Unknown';
     return `${formattedDate} by ${author}`;
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async getTemplateContent(templateType: TemplateType, revisionId: string): Promise<string> {
@@ -154,16 +157,14 @@ export class TemplatesService {
       const content = this.extractTextFromDocument(response.data);
       return content;
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Failed to fetch template content: ${error.message}`
-      );
+      throw new InternalServerErrorException(`Failed to fetch template content: ${error.message}`);
     }
   }
 
   private extractTextFromDocument(document: any): string {
     const content = document.body?.content || [];
     let text = '';
-    
+
     for (const element of content) {
       if (element.paragraph) {
         const paragraph = element.paragraph;
@@ -174,7 +175,7 @@ export class TemplatesService {
         }
       }
     }
-    
+
     return text.trim();
   }
 }

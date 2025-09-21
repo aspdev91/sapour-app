@@ -49,9 +49,11 @@ export class UsersService {
       throw new BadRequestException('Limit must be between 1 and 100');
     }
 
-    const whereClause = cursor ? { 
-      createdAt: { lt: new Date(cursor) } 
-    } : {};
+    const whereClause = cursor
+      ? {
+          createdAt: { lt: new Date(cursor) },
+        }
+      : {};
 
     const users = await this.prisma.user.findMany({
       where: whereClause,
@@ -67,7 +69,9 @@ export class UsersService {
 
     const hasMore = users.length > limit;
     const returnUsers = hasMore ? users.slice(0, limit) : users;
-    const nextCursor = hasMore ? returnUsers[returnUsers.length - 1].createdAt.toISOString() : undefined;
+    const nextCursor = hasMore
+      ? returnUsers[returnUsers.length - 1].createdAt.toISOString()
+      : undefined;
 
     return {
       users: returnUsers,
@@ -78,7 +82,7 @@ export class UsersService {
 
   async createUser(data: CreateUserDto, createdByAdminId: string): Promise<UserDetail> {
     const validatedData = CreateUserSchema.parse(data);
-    
+
     const user = await this.prisma.user.create({
       data: {
         name: validatedData.name,

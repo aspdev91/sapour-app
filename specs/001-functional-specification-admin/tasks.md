@@ -146,25 +146,25 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 - Implement JWKS verification and allowlist check against `Admin` table.
 - Dependencies: T020
 
-## T031. Users service [P]
+## T031. Users service [P] [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/users/users.service.ts`
 - Implement list (paginated, newest first), create (consent true), get by id (include media, reports).
 - Dependencies: T021
 
-## T032. Media service [P]
+## T032. Media service [P] [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/media/media.service.ts`
 - Implement signed upload URL generation (Supabase Storage) and analysis trigger orchestration (Hume/OpenAI) with polling.
 - Dependencies: T022
 
-## T033. Templates service [P]
+## T033. Templates service [P] [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/templates/templates.service.ts`
 - Implement Google Docs/Drive revisions listing with caching and backoff.
 - Dependencies: T023
 
-## T034. Reports service [P]
+## T034. Reports service [P] [X]
 
 - `/Users/mt/Documents/GitHub/sapour-app/backend/src/reports/reports.service.ts`
 - Compose prompts, call OpenAI, persist immutable report with provenance.

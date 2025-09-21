@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -27,12 +32,12 @@ export class MediaService {
 
   async createSignedUploadUrl(data: CreateSignedUrlDto): Promise<SignedUrlResponse> {
     const validatedData = CreateSignedUrlSchema.parse(data);
-    
+
     // Verify user exists
     const user = await this.prisma.user.findUnique({
       where: { id: validatedData.userId },
     });
-    
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -40,10 +45,11 @@ export class MediaService {
     // Generate unique storage path
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const bucket = validatedData.type === 'image' 
-      ? process.env.SUPABASE_STORAGE_BUCKET_IMAGES || 'images'
-      : process.env.SUPABASE_STORAGE_BUCKET_AUDIO || 'audio';
-    
+    const bucket =
+      validatedData.type === 'image'
+        ? process.env.SUPABASE_STORAGE_BUCKET_IMAGES || 'images'
+        : process.env.SUPABASE_STORAGE_BUCKET_AUDIO || 'audio';
+
     const storagePath = `${validatedData.userId}/${timestamp}-${randomSuffix}`;
     const fullPath = `${bucket}/${storagePath}`;
 
@@ -110,7 +116,7 @@ export class MediaService {
       // Mark as failed if analysis trigger fails
       await this.prisma.media.update({
         where: { id: mediaId },
-        data: { 
+        data: {
           status: 'failed',
           error: error.message,
         },

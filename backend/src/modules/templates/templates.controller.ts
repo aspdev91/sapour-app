@@ -1,12 +1,15 @@
-import { Controller, Get, HttpCode, Param } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, UseGuards } from '@nestjs/common';
+import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard';
+import { TemplatesService } from './templates.service';
 
 @Controller('templates')
+@UseGuards(SupabaseJwtGuard)
 export class TemplatesController {
+  constructor(private readonly templatesService: TemplatesService) {}
+
   @Get(':templateType/revisions')
   @HttpCode(200)
-  listRevisions(@Param('templateType') templateType: string) {
-    return {
-      revisions: [{ id: '1', label: `${templateType} v1`, createdAt: new Date().toISOString() }],
-    };
+  async listRevisions(@Param('templateType') templateType: string) {
+    return await this.templatesService.getTemplateRevisions(templateType);
   }
 }

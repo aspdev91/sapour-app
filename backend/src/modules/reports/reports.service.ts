@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
 import { TemplatesService, TemplateType } from '../templates/templates.service';
@@ -8,10 +13,10 @@ const CreateReportSchema = z.object({
   reportType: z.enum([
     'first_impression',
     'first_impression_divergence',
-    'my_type', 
+    'my_type',
     'my_type_divergence',
     'romance_compatibility',
-    'friendship_compatibility'
+    'friendship_compatibility',
   ]),
   primaryUserId: z.string().uuid(),
   secondaryUserId: z.string().uuid().optional(),
@@ -41,7 +46,7 @@ export interface ReportDetail {
 export class ReportsService {
   private readonly prisma = new PrismaClient();
   private readonly openai: OpenAI;
-  
+
   constructor(private readonly templatesService: TemplatesService) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -50,7 +55,7 @@ export class ReportsService {
 
   async createReport(data: CreateReportDto): Promise<ReportDetail> {
     const validatedData = CreateReportSchema.parse(data);
-    
+
     // Verify users exist
     const primaryUser = await this.prisma.user.findUnique({
       where: { id: validatedData.primaryUserId },
@@ -67,7 +72,7 @@ export class ReportsService {
         },
       },
     });
-    
+
     if (!primaryUser) {
       throw new NotFoundException('Primary user not found');
     }
@@ -89,7 +94,7 @@ export class ReportsService {
           },
         },
       });
-      
+
       if (!secondaryUser) {
         throw new NotFoundException('Secondary user not found');
       }
@@ -100,7 +105,7 @@ export class ReportsService {
     try {
       templateContent = await this.templatesService.getTemplateContent(
         validatedData.templateType as TemplateType,
-        validatedData.templateRevisionId
+        validatedData.templateRevisionId,
       );
     } catch (error) {
       throw new BadRequestException(`Failed to get template content: ${error.message}`);
@@ -111,7 +116,7 @@ export class ReportsService {
       templateContent,
       primaryUser,
       secondaryUser,
-      validatedData.selfObservedDifferences
+      validatedData.selfObservedDifferences,
     );
 
     // Generate report using OpenAI
@@ -122,10 +127,11 @@ export class ReportsService {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert personality analyst. Generate detailed, insightful reports based on the provided template and user data. Be professional, empathetic, and constructive in your analysis.',
+            content:
+              'You are an expert personality analyst. Generate detailed, insightful reports based on the provided template and user data. Be professional, empathetic, and constructive in your analysis.',
           },
           {
-            role: 'user', 
+            role: 'user',
             content: prompt,
           },
         ],
@@ -177,41 +183,42 @@ export class ReportsService {
     templateContent: string,
     primaryUser: any,
     secondaryUser?: any,
-    selfObservedDifferences?: string
+    selfObservedDifferences?: string,
   ): Promise<string> {
     let prompt = `Template for analysis:\n${templateContent}\n\n`;
-    
+
     // Add primary user data
     prompt += `PRIMARY USER: ${primaryUser.name}\n`;
-    
+
     if (primaryUser.media.length > 0) {
-      prompt += "Available analysis data:\n";
+      prompt += 'Available analysis data:\n';
       for (const media of primaryUser.media) {
         prompt += `- ${media.type.toUpperCase()} analysis (${media.provider}): ${JSON.stringify(media.analysisJson)}\n`;
       }
     } else {
-      prompt += "Note: No media analysis available for primary user.\n";
+      prompt += 'Note: No media analysis available for primary user.\n';
     }
-    
+
     if (selfObservedDifferences) {
       prompt += `Self-observed differences: ${selfObservedDifferences}\n`;
     }
-    
+
     // Add secondary user data if applicable
     if (secondaryUser) {
       prompt += `\nSECONDARY USER: ${secondaryUser.name}\n`;
       if (secondaryUser.media.length > 0) {
-        prompt += "Available analysis data:\n";
+        prompt += 'Available analysis data:\n';
         for (const media of secondaryUser.media) {
           prompt += `- ${media.type.toUpperCase()} analysis (${media.provider}): ${JSON.stringify(media.analysisJson)}\n`;
         }
       } else {
-        prompt += "Note: No media analysis available for secondary user.\n";
+        prompt += 'Note: No media analysis available for secondary user.\n';
       }
     }
-    
-    prompt += "\nBased on the template and available data, please generate a comprehensive analysis report. If some data is missing, note this in the report but proceed with the available information.";
-    
+
+    prompt +=
+      '\nBased on the template and available data, please generate a comprehensive analysis report. If some data is missing, note this in the report but proceed with the available information.';
+
     return prompt;
   }
 
@@ -242,14 +249,14 @@ export class ReportsService {
 
   async listReports(primaryUserId?: string, limit = 20): Promise<ReportDetail[]> {
     const where = primaryUserId ? { primaryUserId } : {};
-    
+
     const reports = await this.prisma.report.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: limit,
     });
 
-    return reports.map(report => ({
+    return reports.map((report) => ({
       id: report.id,
       reportType: report.reportType,
       primaryUserId: report.primaryUserId,

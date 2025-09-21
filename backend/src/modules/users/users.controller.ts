@@ -1,34 +1,48 @@
-import { Body, Controller, Get, Param, Post, Query, HttpCode } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  HttpCode,
+  UseGuards,
+  Request,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard';
+import { UsersService, CreateUserDto } from './users.service';
 
 @Controller('users')
+@UseGuards(SupabaseJwtGuard)
 export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
   @Get()
   @HttpCode(200)
-  list(@Query('cursor') cursor?: string, @Query('limit') limit?: string) {
-    return { items: [], nextCursor: null };
+  async list(
+    @Query('cursor') cursor?: string,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
+    const result = await this.usersService.listUsers(cursor, limit);
+    return {
+      users: result.users,
+      nextCursor: result.nextCursor,
+      hasMore: result.hasMore,
+    };
   }
 
   @Post()
   @HttpCode(201)
-  create(@Body() body: { name: string }) {
-    return {
-      id: '00000000-0000-0000-0000-000000000000',
-      name: body?.name ?? 'Unnamed',
-      consent: true,
-      createdAt: new Date().toISOString(),
-    };
+  async create(@Body() body: CreateUserDto, @Request() req: any) {
+    // Get admin ID from the authenticated user (set by guard)
+    const adminId = req.user.userId; // This should be mapped to admin ID
+    return await this.usersService.createUser(body, adminId);
   }
 
   @Get(':userId')
   @HttpCode(200)
-  getById(@Param('userId') userId: string) {
-    return {
-      id: userId,
-      name: 'Test User',
-      consent: true,
-      createdAt: new Date().toISOString(),
-      media: [],
-      reports: [],
-    };
+  async getById(@Param('userId') userId: string) {
+    return await this.usersService.getUserById(userId);
   }
 }
