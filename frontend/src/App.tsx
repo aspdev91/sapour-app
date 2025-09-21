@@ -1,10 +1,10 @@
-import { Routes, Route } from 'react-router-dom'
-import { Toaster } from 'sonner'
-import Layout from './components/Layout'
-import Home from './routes/Home'
-import UsersRoutes from './routes/users'
-import ExperimentsRoutes from './routes/experiments'
-import ReportsRoutes from './routes/reports'
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import Layout from './components/Layout';
+import Home from './routes/Home';
+import UsersRoutes from './routes/users';
+import ExperimentsRoutes from './routes/experiments';
+import ReportsRoutes from './routes/reports';
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
       </Layout>
       <Toaster position="top-right" />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

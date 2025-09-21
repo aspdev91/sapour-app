@@ -219,18 +219,18 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 
 ## Integration tasks (cross-cutting)
 
-## T050. Sentry instrumentation (backend and frontend) [P]
+## T050. Sentry instrumentation (backend and frontend) [P] [X]
 
 - Backend: `@sentry/node` setup, performance tracing, error interceptor.
 - Frontend: `@sentry/react` with Vite integration.
 - Dependencies: T001, T002
 
-## T051. Structured logging and request ids (backend) [P]
+## T051. Structured logging and request ids (backend) [P] [X]
 
 - Add a logger module with request id middleware; log key events.
 - Dependencies: T001
 
-## T052. Typed REST client for frontend [P]
+## T052. Typed REST client for frontend [P] [X]
 
 - Generate a typed client (OpenAPI client or zodios) from `/contracts/openapi.yaml` for frontend consumption.
 - Replace direct fetches with typed client calls.

@@ -16,9 +16,7 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-destructive">Something went wrong</CardTitle>
-        <CardDescription>
-          An unexpected error occurred. Our team has been notified.
-        </CardDescription>
+        <CardDescription>An unexpected error occurred. Our team has been notified.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground font-mono bg-muted p-2 rounded">
@@ -28,10 +26,7 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
           <Button onClick={resetError} variant="outline" className="flex-1">
             Try Again
           </Button>
-          <Button
-            onClick={() => window.location.href = '/'}
-            className="flex-1"
-          >
+          <Button onClick={() => (window.location.href = '/')} className="flex-1">
             Go Home
           </Button>
         </div>
@@ -51,7 +46,7 @@ const SentryErrorBoundary = Sentry.withErrorBoundary(
         componentStack: errorInfo.componentStack,
       });
     },
-  }
+  },
 );
 
 export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({

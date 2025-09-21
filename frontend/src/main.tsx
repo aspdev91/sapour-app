@@ -1,16 +1,16 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import * as Sentry from '@sentry/react'
-import { 
-  BrowserRouter, 
-  useLocation, 
-  useNavigationType, 
-  createRoutesFromChildren, 
-  matchRoutes 
-} from 'react-router-dom'
-import App from './App'
-import ErrorBoundary from './components/ErrorBoundary'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import * as Sentry from '@sentry/react';
+import {
+  BrowserRouter,
+  useLocation,
+  useNavigationType,
+  createRoutesFromChildren,
+  matchRoutes,
+} from 'react-router-dom';
+import App from './App';
+import ErrorBoundary from './components/ErrorBoundary';
+import './index.css';
 
 // Initialize Sentry for error tracking
 Sentry.init({
@@ -23,7 +23,7 @@ Sentry.init({
         useLocation,
         useNavigationType,
         createRoutesFromChildren,
-        matchRoutes
+        matchRoutes,
       ),
     }),
     Sentry.replayIntegration({
@@ -44,7 +44,7 @@ Sentry.init({
     }
     return event;
   },
-})
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -54,4 +54,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       </BrowserRouter>
     </ErrorBoundary>
   </React.StrictMode>,
-)
+);

@@ -7,8 +7,8 @@ import { LoggerService } from './logger.service';
 export class RequestIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // Generate or use existing request ID
-    const requestId = req.headers['x-request-id'] as string || uuidv4();
-    
+    const requestId = (req.headers['x-request-id'] as string) || uuidv4();
+
     // Set request ID in headers
     req.headers['x-request-id'] = requestId;
     res.setHeader('x-request-id', requestId);

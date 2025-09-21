@@ -31,7 +31,7 @@ export class LoggerService extends Logger {
   private formatMessage(level: string, message: string, meta?: any): string {
     const context = LoggerService.getContext();
     const timestamp = new Date().toISOString();
-    
+
     const logEntry = {
       timestamp,
       level,
@@ -46,7 +46,7 @@ export class LoggerService extends Logger {
 
     // Filter out undefined values
     const filteredEntry = Object.fromEntries(
-      Object.entries(logEntry).filter(([, value]) => value !== undefined)
+      Object.entries(logEntry).filter(([, value]) => value !== undefined),
     );
 
     return JSON.stringify(filteredEntry);
@@ -88,16 +88,16 @@ export class LoggerService extends Logger {
       url,
       statusCode,
       duration,
-      ...meta
+      ...meta,
     });
   }
 
   logError(error: Error, context?: string, meta?: any) {
-    this.error(
-      `Error${context ? ` in ${context}` : ''}: ${error.message}`,
-      error.stack,
-      { errorName: error.name, context, ...meta }
-    );
+    this.error(`Error${context ? ` in ${context}` : ''}: ${error.message}`, error.stack, {
+      errorName: error.name,
+      context,
+      ...meta,
+    });
   }
 
   logAnalysisEvent(mediaId: string, type: 'image' | 'audio', status: string, meta?: any) {
@@ -106,7 +106,7 @@ export class LoggerService extends Logger {
       type,
       status,
       event: 'media_analysis',
-      ...meta
+      ...meta,
     });
   }
 
@@ -116,7 +116,7 @@ export class LoggerService extends Logger {
       reportType,
       duration,
       event: 'report_generation',
-      ...meta
+      ...meta,
     });
   }
 }

@@ -11,7 +11,7 @@ export const TimestampSchema = z.string().datetime();
 export const MediaTypeSchema = z.enum(['image', 'audio']);
 export const ReportTypeSchema = z.enum([
   'first_impression',
-  'first_impression_divergence', 
+  'first_impression_divergence',
   'my_type',
   'my_type_divergence',
   'romance_compatibility',
@@ -139,7 +139,7 @@ class BaseApiClient {
     }
 
     const data = await response.json();
-    
+
     // Validate response with Zod if schema provided
     if (schema) {
       try {
@@ -164,7 +164,9 @@ class BaseApiClient {
   }
 
   // Users endpoints
-  async getUsers(params: { cursor?: string; limit?: number } = {}): Promise<PaginatedUsersResponse> {
+  async getUsers(
+    params: { cursor?: string; limit?: number } = {},
+  ): Promise<PaginatedUsersResponse> {
     const query = new URLSearchParams();
     if (params.cursor) query.set('cursor', params.cursor);
     if (params.limit) query.set('limit', params.limit.toString());
@@ -173,10 +175,14 @@ class BaseApiClient {
   }
 
   async createUser(data: { name: string }): Promise<User> {
-    return this.request('/users', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }, UserSchema);
+    return this.request(
+      '/users',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      UserSchema,
+    );
   }
 
   async getUser(userId: UUID): Promise<User & { media: Media[]; reports: Report[] }> {
@@ -215,10 +221,14 @@ class BaseApiClient {
     templateRevisionId: string;
     selfObservedDifferences?: string;
   }): Promise<Report> {
-    return this.request('/reports', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }, ReportSchema);
+    return this.request(
+      '/reports',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+      ReportSchema,
+    );
   }
 
   async getReport(reportId: UUID): Promise<Report> {
