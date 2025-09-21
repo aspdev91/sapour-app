@@ -104,30 +104,30 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
 
 All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/schema.prisma` (run `pnpm --filter backend prisma:migrate` after each).
 
-## T020. Define Prisma model: Admin
+## T020. Define Prisma model: Admin [X]
 
 - Add `Admin` model with fields from `data-model.md` (id, email unique, allowlisted, timestamps).
 - Generate migration and apply to local DB.
 - Dependencies: T001
 
-## T021. Define Prisma model: User
+## T021. Define Prisma model: User [X]
 
 - Add `User` model with fields and FK to `Admin` for `createdByAdminId`.
 - Index `(createdAt desc)`.
 - Dependencies: T020
 
-## T022. Define Prisma model: Media
+## T022. Define Prisma model: Media [X]
 
 - Add `Media` model with enums `type`, `status`; FK to `User`.
 - Index `(userId, createdAt desc)`.
 - Dependencies: T021
 
-## T023. Define Prisma model: Template
+## T023. Define Prisma model: Template [X]
 
 - Add `Template` with unique `templateType` enum and external document identifiers.
 - Dependencies: T022
 
-## T024. Define Prisma model: Report
+## T024. Define Prisma model: Report [X]
 
 - Add `Report` with immutable constraint (no updates), enums, FKs to `User`.
 - Index `(primaryUserId, createdAt desc)`.
