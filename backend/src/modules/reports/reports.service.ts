@@ -107,7 +107,7 @@ export class ReportsService {
         validatedData.templateType as TemplateType,
         validatedData.templateRevisionId,
       );
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(`Failed to get template content: ${error.message}`);
     }
 
@@ -143,9 +143,11 @@ export class ReportsService {
       if (!reportContent) {
         throw new Error('Empty response from OpenAI');
       }
-      } catch (error) {
-        throw new InternalServerErrorException(`Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
 
     // Persist immutable report with full provenance
     const report = await this.prisma.report.create({
@@ -171,7 +173,7 @@ export class ReportsService {
       templateType: report.templateType,
       templateDocumentId: report.templateDocumentId,
       templateRevisionId: report.templateRevisionId,
-      templateRevisionLabel: report.templateRevisionLabel,
+        templateRevisionLabel: report.templateRevisionLabel || undefined,
       aiProviderName: report.aiProviderName,
       aiModelName: report.aiModelName,
       content: report.content,
@@ -239,7 +241,7 @@ export class ReportsService {
       templateType: report.templateType,
       templateDocumentId: report.templateDocumentId,
       templateRevisionId: report.templateRevisionId,
-      templateRevisionLabel: report.templateRevisionLabel,
+        templateRevisionLabel: report.templateRevisionLabel || undefined,
       aiProviderName: report.aiProviderName,
       aiModelName: report.aiModelName,
       content: report.content,
@@ -264,7 +266,7 @@ export class ReportsService {
       templateType: report.templateType,
       templateDocumentId: report.templateDocumentId,
       templateRevisionId: report.templateRevisionId,
-      templateRevisionLabel: report.templateRevisionLabel,
+        templateRevisionLabel: report.templateRevisionLabel || undefined,
       aiProviderName: report.aiProviderName,
       aiModelName: report.aiModelName,
       content: report.content,

@@ -119,14 +119,14 @@ export default function ExperimentsList() {
   const selectedReportType = watch('reportType');
 
   useEffect(() => {
-  const fetchUsers = async () => {
-    try {
-      const response = await apiClient.getUsers({ limit: 100 });
-      setUsers(response.users);
-    } catch (error) {
-      toast.error('Failed to load users');
-    }
-  };
+    const fetchUsers = async () => {
+      try {
+        const response = await apiClient.getUsers({ limit: 100 });
+        setUsers(response.users);
+      } catch (error) {
+        toast.error('Failed to load users');
+      }
+    };
 
     fetchUsers();
   }, []);
@@ -211,7 +211,7 @@ export default function ExperimentsList() {
               <CardTitle className="flex items-center gap-2">
                 {selectedExperimentData && (
                   <>
-                    <selectedExperimentData.icon className="w-5 h-5" />
+                    {React.createElement(selectedExperimentData.icon, { className: "w-5 h-5" })}
                     {selectedExperimentData.title}
                   </>
                 )}
@@ -339,12 +339,12 @@ export default function ExperimentsList() {
             <Button type="submit" disabled={generating}>
               {generating ? (
                 <>
-                  <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />
+                  {React.createElement(Loader2Icon, { className: "w-4 h-4 mr-2 animate-spin" })}
                   Generating Report...
                 </>
               ) : (
                 <>
-                  <BeakerIcon className="w-4 h-4 mr-2" />
+                  {React.createElement(BeakerIcon, { className: "w-4 h-4 mr-2" })}
                   Generate Report
                 </>
               )}
@@ -378,7 +378,7 @@ export default function ExperimentsList() {
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Icon className="w-5 h-5" />
+                  {React.createElement(Icon, { className: "w-5 h-5" })}
                   {experiment.title}
                   {experiment.needsSecondaryUser && (
                     <Badge variant="secondary" className="text-xs">
@@ -391,7 +391,7 @@ export default function ExperimentsList() {
               <CardContent>
                 <div className="flex items-center text-sm text-primary">
                   Start Experiment
-                  <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  {React.createElement(ArrowRightIcon, { className: "w-4 h-4 ml-2" })}
                 </div>
               </CardContent>
             </Card>

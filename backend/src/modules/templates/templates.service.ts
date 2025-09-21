@@ -114,9 +114,9 @@ export class TemplatesService {
         return this.getTemplateRevisions(templateType); // Retry once
       }
 
-        throw new InternalServerErrorException(
-          `Failed to fetch template revisions: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
+      throw new InternalServerErrorException(
+        `Failed to fetch template revisions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -157,7 +157,9 @@ export class TemplatesService {
       const content = this.extractTextFromDocument(response.data);
       return content;
     } catch (error) {
-      throw new InternalServerErrorException(`Failed to fetch template content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new InternalServerErrorException(
+        `Failed to fetch template content: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 

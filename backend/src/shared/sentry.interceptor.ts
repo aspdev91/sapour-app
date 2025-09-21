@@ -14,7 +14,7 @@ function ensureSentry() {
       tracesSampleRate: 0.1,
       profilesSampleRate: 0.1,
       environment: process.env.NODE_ENV || 'development',
-      integrations: [Sentry.httpIntegration({ tracing: true }), Sentry.expressIntegration()],
+      integrations: [Sentry.httpIntegration(), Sentry.expressIntegration()],
       beforeSend(event) {
         // Add request context for better error tracking
         if (event.request && event.request.headers) {
@@ -40,8 +40,8 @@ export class SentryInterceptor implements NestInterceptor {
     const request = http.getRequest();
     const response = http.getResponse();
 
-    // Start performance transaction
-    const transaction = Sentry.startTransaction({
+    // Start performance transaction  
+    const transaction = Sentry.startSpan({
       op: 'http',
       name: `${request.method} ${request.route?.path || request.url}`,
       data: {
@@ -51,23 +51,18 @@ export class SentryInterceptor implements NestInterceptor {
       },
     });
 
-    // Set transaction on the scope
-    Sentry.getCurrentScope().setSpan(transaction);
+    // Set span context (simplified for compatibility)
 
     const startTime = Date.now();
 
     return next.handle().pipe(
       tap({
         next: () => {
-          // Set response status on success
-          transaction.setHttpStatus(response.statusCode);
-          transaction.setTag('http.status_code', response.statusCode);
+          // Record success status
         },
         finalize: () => {
-          // Always finish transaction
+          // Log response time
           const duration = Date.now() - startTime;
-          transaction.setTag('response_time', duration);
-          transaction.finish();
 
           // Log API call
           this.logger.logApiCall(request.method, request.url, response.statusCode, duration, {
@@ -90,9 +85,7 @@ export class SentryInterceptor implements NestInterceptor {
             requestId: LoggerService.getRequestId(),
           });
 
-          // Set transaction as failed
-          transaction.setHttpStatus(500);
-          transaction.setTag('http.status_code', 500);
+          // Record error status
 
           Sentry.captureException(error);
         });

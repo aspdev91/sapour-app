@@ -118,7 +118,10 @@ export class UsersService {
       consent: user.consent,
       createdAt: user.createdAt,
       createdByAdminId: user.createdByAdminId,
-      media: user.media,
+      media: user.media.map(media => ({
+        ...media,
+        publicUrl: media.publicUrl || undefined,
+      })),
       reports: user.primaryReports,
     };
   }
@@ -159,7 +162,10 @@ export class UsersService {
       consent: user.consent,
       createdAt: user.createdAt,
       createdByAdminId: user.createdByAdminId,
-      media: user.media,
+      media: user.media.map(media => ({
+        ...media,
+        publicUrl: media.publicUrl || undefined,
+      })),
       reports: user.primaryReports,
     };
   }
