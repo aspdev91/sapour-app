@@ -16,14 +16,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  BeakerIcon, 
-  UserIcon, 
-  HeartIcon, 
-  UsersIcon, 
+import {
+  BeakerIcon,
+  UserIcon,
+  HeartIcon,
+  UsersIcon,
   Loader2Icon,
   SparklesIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
 } from 'lucide-react';
 import { apiClient, type User, type ReportType, type TemplateRevision } from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -65,7 +65,7 @@ const experimentTypes = [
   {
     id: 'my_type',
     title: 'My Type',
-    description: 'Analyze user\'s self-perception and personality type',
+    description: "Analyze user's self-perception and personality type",
     icon: UserIcon,
     needsSecondaryUser: false,
     templateType: 'my_type',
@@ -140,7 +140,7 @@ export default function ExperimentsList() {
     const fetchRevisions = async () => {
       if (!selectedReportType) return;
 
-      const experiment = experimentTypes.find(exp => exp.id === selectedReportType);
+      const experiment = experimentTypes.find((exp) => exp.id === selectedReportType);
       if (!experiment) return;
 
       try {
@@ -165,7 +165,7 @@ export default function ExperimentsList() {
     setGenerating(true);
 
     try {
-      const experiment = experimentTypes.find(exp => exp.id === data.reportType);
+      const experiment = experimentTypes.find((exp) => exp.id === data.reportType);
       if (!experiment) {
         throw new Error('Invalid experiment type');
       }
@@ -189,7 +189,7 @@ export default function ExperimentsList() {
     }
   };
 
-  const selectedExperimentData = experimentTypes.find(exp => exp.id === selectedReportType);
+  const selectedExperimentData = experimentTypes.find((exp) => exp.id === selectedReportType);
 
   if (selectedExperiment || selectedReportType) {
     return (

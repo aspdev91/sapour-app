@@ -240,35 +240,35 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 
 ## Frontend core (Vite + React Router)
 
-## T060. App shell and navigation
+## T060. App shell and navigation [X]
 
 - Files under `/Users/mt/Documents/GitHub/sapour-app/frontend/src/` with Shadcn UI layout and nav (React Router) to Users and Experiments.
 - Dependencies: T002
 
-## T061. Users list with infinite scroll
+## T061. Users list with infinite scroll [X]
 
 - Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/users/UsersList.tsx`
 - Calls typed REST client → backend GET `/users`.
 - Dependencies: T052
 
-## T062. Add New User with media upload
+## T062. Add New User with media upload [X]
 
 - Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/users/NewUser.tsx`
 - Uses signed URL flow for image/audio upload.
 - Dependencies: T052
 
-## T063. User profile (media gallery, audio player, reports list)
+## T063. User profile (media gallery, audio player, reports list) [X]
 
 - Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/users/UserDetail.tsx`
 - Dependencies: T052
 
-## T064. Experiments pages (First Impression, My Type, Compatibility)
+## T064. Experiments pages (First Impression, My Type, Compatibility) [X]
 
 - Routes under `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/experiments/`
 - Allow selecting template revision and generating report.
 - Dependencies: T052
 
-## T065. Report viewer (read-only with provenance)
+## T065. Report viewer (read-only with provenance) [X]
 
 - Route: `/Users/mt/Documents/GitHub/sapour-app/frontend/src/routes/reports/ReportViewer.tsx`
 - Dependencies: T052
