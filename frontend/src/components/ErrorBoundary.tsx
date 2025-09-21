@@ -9,7 +9,6 @@ interface ErrorBoundaryProps {
 }
 
 const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> = ({
-  error,
   resetError,
 }) => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -20,7 +19,7 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground font-mono bg-muted p-2 rounded">
-          {error.message}
+          Error occurred
         </div>
         <div className="flex gap-2">
           <Button onClick={resetError} variant="outline" className="flex-1">
@@ -68,7 +67,20 @@ export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
 }) => {
   if (CustomFallback) {
     return (
-      <Sentry.ErrorBoundary fallback={CustomFallback} showDialog>
+      <Sentry.ErrorBoundary fallback={({ resetError }: { error: Error; resetError: () => void }) => (
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
+          <p className="text-gray-600 mb-4 text-center">
+            We're sorry, but something unexpected happened. Please try refreshing the page.
+          </p>
+          <button
+            onClick={resetError}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Try again
+          </button>
+        </div>
+      )} showDialog>
         {children}
       </Sentry.ErrorBoundary>
     );
