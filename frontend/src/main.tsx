@@ -18,13 +18,13 @@ Sentry.init({
   environment: import.meta.env.MODE,
   integrations: [
     Sentry.browserTracingIntegration({
-      routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-        React.useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes,
-      ),
+      // routingInstrumentation: Sentry.reactRouterV6Instrumentation(
+      //   React.useEffect,
+      //   useLocation,
+      //   useNavigationType,
+      //   createRoutesFromChildren,
+      //   matchRoutes,
+      // ),
     }),
     Sentry.replayIntegration({
       maskAllText: false,

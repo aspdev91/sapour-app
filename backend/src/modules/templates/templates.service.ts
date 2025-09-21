@@ -107,7 +107,7 @@ export class TemplatesService {
       });
 
       return { revisions };
-    } catch (error) {
+    } catch (error: any) {
       // Implement exponential backoff for rate limiting
       if (error.code === 429) {
         await this.delay(1000 + Math.random() * 2000); // 1-3 second delay

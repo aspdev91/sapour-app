@@ -43,7 +43,7 @@ const SentryErrorBoundary = Sentry.withErrorBoundary(
       scope.setTag('component', 'ErrorBoundary');
       scope.setLevel('error');
       scope.setContext('errorBoundary', {
-        componentStack: errorInfo.componentStack,
+        componentStack: errorInfo?.componentStack || 'Unknown component stack',
       });
     },
   },
