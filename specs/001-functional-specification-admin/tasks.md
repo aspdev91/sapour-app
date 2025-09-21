@@ -2,7 +2,9 @@
 
 IMPORTANT: After each completed task on the list below, add files to Git, commit them with the task name, and push the changes
 
-NEVER use --skipLibCheck to skip fixing typescript errors
+NEVER use --skipLibCheck and --noEmit to skip fixing typescript errors
+
+Before starting a new task, always run the app to see if it launches and doesn't throw any errors.
 
 Feature directory: `/Users/mt/Documents/GitHub/sapour-app/specs/001-functional-specification-admin`
 
