@@ -39,7 +39,7 @@ const SentryErrorBoundary = Sentry.withErrorBoundary(
   ({ children }: { children: React.ReactNode }) => <>{children}</>,
   {
     fallback: DefaultErrorFallback as any,
-    beforeCapture: (scope, error, errorInfo) => {
+    beforeCapture: (scope, _error, errorInfo) => {
       scope.setTag('component', 'ErrorBoundary');
       scope.setLevel('error');
       scope.setContext('errorBoundary', {

@@ -53,7 +53,7 @@ export default function NewUser() {
     handleSubmit,
     formState: { errors },
   } = useForm<CreateUserForm>({
-    resolver: zodResolver(createUserSchema),
+    resolver: zodResolver(createUserSchema as any),
   });
 
   const handleFileUpload = async (file: File, type: MediaType, setState: typeof setImageUpload) => {
