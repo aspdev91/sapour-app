@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import { ExecutionContext } from '@nestjs/common';
 import { AppModule } from '../src/modules/app/app.module';
 import { AuthService } from '../src/modules/auth/auth.service';
@@ -180,6 +181,105 @@ export async function createTestApp(): Promise<TestingModule> {
         updatedAt: new Date(),
       }),
     })
+    .compile();
+
+  return moduleRef;
+}
+
+export async function setupTestApp(app: INestApplication): Promise<void> {
+  // Configure app for testing
+  app.setGlobalPrefix(''); // No global prefix for tests
+}
+
+export async function cleanupDatabase(prisma: PrismaService): Promise<void> {
+  // Clean up test data - handle missing tables gracefully
+  // Note: Don't delete admins and templates as they are created once per test suite
+  try {
+    await prisma.report.deleteMany();
+  } catch (error) {
+    // Table might not exist, continue
+  }
+  try {
+    await prisma.media.deleteMany();
+  } catch (error) {
+    // Table might not exist, continue
+  }
+  try {
+    await prisma.user.deleteMany();
+  } catch (error) {
+    // Table might not exist, continue
+  }
+}
+
+export async function initializeTestDatabase(prisma: PrismaService): Promise<void> {
+  // Seed template data for integration tests
+  const templates = [
+    {
+      templateType: 'first_impression' as const,
+      externalDocumentId: '1BxqQ8vz_test_doc_1',
+      externalDocumentUrl: 'https://docs.google.com/document/d/1BxqQ8vz_test_doc_1',
+    },
+    {
+      templateType: 'my_type' as const,
+      externalDocumentId: '1BxqQ8vz_test_doc_2',
+      externalDocumentUrl: 'https://docs.google.com/document/d/1BxqQ8vz_test_doc_2',
+    },
+    {
+      templateType: 'romance_compatibility' as const,
+      externalDocumentId: '1BxqQ8vz_test_doc_3',
+      externalDocumentUrl: 'https://docs.google.com/document/d/1BxqQ8vz_test_doc_3',
+    },
+    {
+      templateType: 'friendship_compatibility' as const,
+      externalDocumentId: '1BxqQ8vz_test_doc_4',
+      externalDocumentUrl: 'https://docs.google.com/document/d/1BxqQ8vz_test_doc_4',
+    },
+  ];
+
+  for (const template of templates) {
+    await prisma.template.upsert({
+      where: { templateType: template.templateType },
+      update: template,
+      create: template,
+    });
+  }
+}
+
+export async function createIntegrationTestApp(
+  adminEmail = 'test@example.com',
+): Promise<TestingModule> {
+  const moduleRef = await Test.createTestingModule({
+    imports: [AppModule],
+  })
+    .overrideProvider(AuthService)
+    .useValue({
+      verifyJwtAndGetUser: async () => ({
+        email: adminEmail,
+        userId: 'test-user-id',
+      }),
+      checkAllowlist: async () => ({
+        email: adminEmail,
+        allowlisted: true,
+      }),
+      verifyTokenAndCheckAllowlist: async () => ({
+        email: adminEmail,
+        userId: 'test-user-id',
+        allowlisted: true,
+      }),
+    })
+    .overrideGuard(SupabaseJwtGuard)
+    .useValue({
+      canActivate: (context: ExecutionContext) => {
+        const request = context.switchToHttp().getRequest();
+        request.user = {
+          email: adminEmail,
+          userId: 'test-user-id',
+          allowlisted: true,
+        };
+        return true;
+      },
+    })
+    // Note: Not overriding PrismaService - using real database for integration tests
     .compile();
 
   return moduleRef;

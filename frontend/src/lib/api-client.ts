@@ -1,5 +1,6 @@
 // Generated TypeScript client based on OpenAPI specification
 import { z } from 'zod';
+import { getSupabaseToken } from './supabase';
 
 // Base URL and configuration
 export const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || 'http://localhost:3001';
@@ -67,9 +68,9 @@ export interface PaginatedUsersResponse {
   hasMore: boolean;
 }
 
-export interface AllowlistResponse {
+export interface UserResponse {
   email: string;
-  allowlisted: boolean;
+  userId: string;
 }
 
 export interface SignedUrlResponse {
@@ -108,9 +109,8 @@ class BaseApiClient {
     this.baseUrl = baseUrl;
   }
 
-  private getAuthToken(): string | null {
-    // TODO: Replace with proper Supabase auth token retrieval
-    return localStorage.getItem('supabase.auth.token');
+  private async getAuthToken(): Promise<string | null> {
+    return await getSupabaseToken();
   }
 
   private async request<T>(
@@ -119,7 +119,7 @@ class BaseApiClient {
     schema?: z.ZodSchema<T>,
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const token = this.getAuthToken();
+    const token = await this.getAuthToken();
 
     const response = await fetch(url, {
       ...options,
@@ -159,8 +159,8 @@ class BaseApiClient {
   }
 
   // Auth endpoints
-  async checkAllowlist(): Promise<AllowlistResponse> {
-    return this.request('/auth/allowlist');
+  async getCurrentUser(): Promise<UserResponse> {
+    return this.request('/auth/me');
   }
 
   // Users endpoints
@@ -241,7 +241,7 @@ export const apiClient = new BaseApiClient();
 
 // Convenience exports (keeping backward compatibility)
 export const authApi = {
-  checkAllowlist: () => apiClient.checkAllowlist(),
+  getCurrentUser: () => apiClient.getCurrentUser(),
 };
 
 export const usersApi = {

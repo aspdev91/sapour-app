@@ -27,10 +27,10 @@ export interface UserDetail {
   createdByAdminId: string;
   media: Array<{
     id: string;
-    type: 'image' | 'audio';
+    type: string;
     storagePath: string;
     publicUrl?: string;
-    status: 'pending' | 'processing' | 'succeeded' | 'failed';
+    status: string;
     createdAt: Date;
   }>;
   reports: Array<{
@@ -43,6 +43,18 @@ export interface UserDetail {
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async getAdminByEmail(email: string) {
+    const admin = await this.prisma.admin.findUnique({
+      where: { email },
+    });
+
+    if (!admin) {
+      throw new NotFoundException(`Admin with email ${email} not found`);
+    }
+
+    return admin;
+  }
 
   async listUsers(cursor?: string, limit = 20): Promise<PaginatedUsers> {
     if (limit < 1 || limit > 100) {

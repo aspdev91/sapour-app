@@ -35,9 +35,13 @@ export class UsersController {
   @Post()
   @HttpCode(201)
   async create(@Body() body: CreateUserDto, @Request() req: any) {
-    // Get admin ID from the authenticated user (set by guard)
-    const adminId = req.user.userId; // This should be mapped to admin ID
-    return await this.usersService.createUser(body, adminId);
+    console.log('Creating user with email:', req.user.email);
+    // Get admin ID from the database using the authenticated user's email
+    const admin = await this.usersService.getAdminByEmail(req.user.email);
+    console.log('Found admin:', admin);
+    const result = await this.usersService.createUser(body, admin.id);
+    console.log('Created user result:', result);
+    return result;
   }
 
   @Get(':userId')

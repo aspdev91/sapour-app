@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Models will be added in tasks T020–T024
+
+model Admin {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  allowlisted   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  lastActiveAt  DateTime?
+
+  // Relations
+  createdUsers  User[]   @relation("AdminCreatedUsers")
+
+  @@index([email])
+}
+
+model User {
+  id              String   @id @default(uuid())
+  name            String
+  consent         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  createdByAdminId String
+
+  // Relations
+  createdBy       Admin    @relation("AdminCreatedUsers", fields: [createdByAdminId], references: [id])
+  media           Media[]  @relation("UserMedia")
+  primaryReports  Report[] @relation("UserPrimaryReports")
+  secondaryReports Report[] @relation("UserSecondaryReports")
+
+  @@index([createdAt])
+}
+
+model Media {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String
+  storagePath  String
+  publicUrl    String?
+  analysisJson String?
+  provider     String?
+  model        String?
+  status       String   @default("pending")
+  error        String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user         User     @relation("UserMedia", fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model Template {
+  id                 String   @id @default(uuid())
+  templateType       String   @unique
+  externalDocumentId String
+  externalDocumentUrl String
+  createdAt          DateTime @default(now())
+}
+
+model Report {
+  id                   String   @id @default(uuid())
+  reportType           String
+  primaryUserId        String
+  secondaryUserId      String?
+  templateType         String
+  templateDocumentId   String
+  templateRevisionId   String
+  templateRevisionLabel String?
+  aiProviderName       String
+  aiModelName          String
+  content              String
+  createdAt            DateTime @default(now())
+
+  // Relations
+  primaryUser          User     @relation("UserPrimaryReports", fields: [primaryUserId], references: [id])
+  secondaryUser        User?    @relation("UserSecondaryReports", fields: [secondaryUserId], references: [id])
+
+  @@index([reportType])
+  @@index([primaryUserId, createdAt])
+}
+

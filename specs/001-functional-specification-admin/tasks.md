@@ -68,13 +68,13 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
 - Provide test runner command in repo scripts: `pnpm --filter backend test:contracts`
 - Dependencies: T001
 
-## T011. Integration test: allowlisted admin can sign in [P]
+## T011. Integration test: allowlisted admin can sign in [P] [X]
 
 - Add Playwright test at `/Users/mt/Documents/GitHub/sapour-app/frontend/tests/e2e/auth-allowlist.spec.ts` covering sign-in and allowlist gating.
 - Mock Supabase Auth in CI.
 - Dependencies: T002
 
-## T012. Integration test: create user and upload media [P]
+## T012. Integration test: create user and upload media [P] [X]
 
 - Add Playwright + backend integration test covering user creation and signed URL upload path.
 - Files:
@@ -82,19 +82,19 @@ Legend: `[P]` means can be executed in parallel when dependencies are met. Tasks
   - `/Users/mt/Documents/GitHub/sapour-app/backend/test/integration/media-upload.spec.ts`
 - Dependencies: T001, T002
 
-## T013. Integration test: trigger analysis for audio/image [P]
+## T013. Integration test: trigger analysis for audio/image [P] [X]
 
 - Backend integration test for `/media/{mediaId}/analysis` with provider-specific behavior (Hume/OpenAI) using mocks.
 - File: `/Users/mt/Documents/GitHub/sapour-app/backend/test/integration/media-analysis.spec.ts`
 - Dependencies: T001
 
-## T014. Integration test: list template revisions and select [P]
+## T014. Integration test: list template revisions and select [P] [X]
 
 - Backend integration test for `/templates/{templateType}/revisions` with Google APIs mocked.
 - File: `/Users/mt/Documents/GitHub/sapour-app/backend/test/integration/templates-revisions.spec.ts`
 - Dependencies: T001
 
-## T015. Integration test: generate and view immutable report [P]
+## T015. Integration test: generate and view immutable report [P] [X]
 
 - Backend test for `/reports` and `/reports/{reportId}` + frontend E2E for read-only viewer with provenance.
 - Files:
@@ -141,7 +141,7 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 
 ## Core tasks: backend services (can be parallel across different modules)
 
-## T030. Auth service and Supabase JWT guard
+## T030. Auth service and Supabase JWT guard [X]
 
 - Files:
   - `/Users/mt/Documents/GitHub/sapour-app/backend/src/auth/auth.module.ts`
@@ -281,23 +281,23 @@ All tasks below modify: `/Users/mt/Documents/GitHub/sapour-app/backend/prisma/sc
 
 ## Polish tasks
 
-## T070. Backend unit tests for services [P]
+## T070. Backend unit tests for services [P] [X]
 
 - Add Jest unit tests under `/Users/mt/Documents/GitHub/sapour-app/backend/test/unit/` for users, media, templates, reports services.
 - Dependencies: T031–T034
 
-## T071. Accessibility checks (key pages) [P]
+## T071. Accessibility checks (key pages) [P] [X]
 
 - Use `@axe-core/playwright` for keyboard nav and semantics on core pages.
 - Dependencies: T060–T065
 
-## T072. Performance budgets and checks [P]
+## T072. Performance budgets and checks [P] [X]
 
 - Backend p95 <200ms for core API (add simple perf tests).
 - Frontend CWV budgets (LCP, CLS, INP) and Playwright traces.
 - Dependencies: T041–T045, T060–T065
 
-## T073. Documentation updates [P]
+## T073. Documentation updates [P] [X]
 
 - Update README with run/test instructions and env docs.
 - Link to `quickstart.md` and endpoints.

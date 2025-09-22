@@ -17,8 +17,8 @@ export class SupabaseJwtGuard implements CanActivate {
     const token = auth.slice('Bearer '.length);
 
     try {
-      // Verify JWT and check allowlist
-      const user = await this.authService.verifyTokenAndCheckAllowlist(token);
+      // Verify JWT token
+      const user = await this.authService.verifyToken(token);
 
       // Add user info to request for use in controllers
       req.user = user;
