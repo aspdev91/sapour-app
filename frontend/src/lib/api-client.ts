@@ -71,6 +71,7 @@ export interface PaginatedUsersResponse {
 export interface UserResponse {
   email: string;
   userId: string;
+  hasAccess: boolean;
 }
 
 export interface SignedUrlResponse {

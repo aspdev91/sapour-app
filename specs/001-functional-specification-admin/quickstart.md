@@ -4,7 +4,7 @@
 
 - Node.js 20.x, pnpm or npm
 - Docker Desktop
-- Supabase project (Postgres + Storage + Auth)
+- **Supabase project (Postgres + Storage + Auth) - Required**
 - Google Cloud project with Docs/Drive APIs enabled and service account
 - Hume.ai API key
 - OpenAI API key
@@ -14,11 +14,11 @@
 
 Create `.env` files:
 
-Frontend (`frontend/.env`):
+Frontend (`frontend/.env`) - **Required**:
 
 ```
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_SENTRY_DSN=...
 VITE_BACKEND_BASE_URL=http://localhost:3001
 ```
@@ -52,6 +52,7 @@ Frontend: http://localhost:3000 Backend: http://localhost:3001
 
 ```
 pnpm -w install
+pnpm --filter backend prisma:migrate  # Run database migrations
 pnpm --filter frontend dev & pnpm --filter backend dev & wait
 ```
 

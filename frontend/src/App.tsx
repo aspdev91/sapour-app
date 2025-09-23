@@ -22,7 +22,7 @@ function AppContent() {
     );
   }
 
-  if (!user?.allowlisted) {
+  if (!user?.hasAccess) {
     return <SignIn />;
   }
 

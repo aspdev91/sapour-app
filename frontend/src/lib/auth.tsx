@@ -3,7 +3,7 @@ import { authApi } from './api-client';
 import { supabase } from './supabase';
 
 interface AuthContextType {
-  user: { email: string; userId: string } | null;
+  user: { email: string; userId: string; hasAccess: boolean } | null;
   loading: boolean;
   error: string | null;
   checkAuth: () => Promise<void>;
@@ -25,7 +25,9 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<{ email: string; userId: string } | null>(null);
+  const [user, setUser] = useState<{ email: string; userId: string; hasAccess: boolean } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,25 +35,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true);
       setError(null);
-      // For now, we'll get user info from Supabase directly
-      // The backend /auth/me endpoint can be used for additional validation if needed
+
+      console.log('Checking authentication...');
+
+      // Use Supabase as the single source of truth for auth state
+      console.log('Checking Supabase session...');
+
       const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (error) throw error;
-      if (user) {
-        setUser({
-          email: user.email!,
-          userId: user.id,
-        });
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.warn('Supabase session error:', sessionError);
+        throw sessionError;
+      }
+
+      console.log('Session result:', { hasSession: !!session });
+
+      if (session) {
+        // User is signed in with Supabase, get additional info from backend
+        console.log('Getting user info from backend...');
+        const userResponse = await authApi.getCurrentUser();
+        console.log('User response:', userResponse);
+        setUser(userResponse);
       } else {
+        console.log('No session found');
         setUser(null);
       }
     } catch (err) {
+      console.error('checkAuth error:', err);
       setError(err instanceof Error ? err.message : 'Authentication failed');
       setUser(null);
     } finally {
+      console.log('checkAuth completed');
       setLoading(false);
     }
   };
@@ -66,11 +83,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Listen for Supabase auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       console.log('Supabase auth state change:', event, session?.user?.email);
 
       if (event === 'SIGNED_IN' && session) {
-        // User signed in with Supabase, now check allowlist
+        // User signed in with Supabase, now get user info from backend
         await checkAuth();
       } else if (event === 'SIGNED_OUT') {
         setUser(null);

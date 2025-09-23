@@ -16,26 +16,15 @@ async function setupAdmin() {
 
     if (existingAdmin) {
       console.log('Admin already exists:', existingAdmin);
-
-      // Update to allowlisted if not already
-      if (!existingAdmin.allowlisted) {
-        const updatedAdmin = await prisma.admin.update({
-          where: { email: adminEmail },
-          data: { allowlisted: true },
-        });
-        console.log('✅ Admin updated to allowlisted:', updatedAdmin);
-      } else {
-        console.log('✅ Admin is already allowlisted');
-      }
+      console.log('✅ Admin has access');
     } else {
       // Create new admin
       const newAdmin = await prisma.admin.create({
         data: {
           email: adminEmail,
-          allowlisted: true,
         },
       });
-      console.log('✅ New admin created and allowlisted:', newAdmin);
+      console.log('✅ New admin created with access:', newAdmin);
     }
   } catch (error) {
     console.error('❌ Error setting up admin:', error);

@@ -8,10 +8,12 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export default function SignIn() {
-  const { checkAuth, error } = useAuth();
+  const { error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Check if Supabase is configured
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) return;
@@ -27,7 +29,7 @@ export default function SignIn() {
         throw error;
       }
 
-      // Authentication successful, checkAuth will be called by the auth state change listener
+      // Authentication successful, auth state listener will handle the rest
     } catch (err) {
       console.error('Sign in failed:', err);
     } finally {
@@ -90,7 +92,7 @@ export default function SignIn() {
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Only allowlisted admin emails can access this application.
+            Only admin emails can access this application.
           </p>
         </CardContent>
       </Card>
