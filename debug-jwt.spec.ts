@@ -76,7 +76,7 @@ test.describe('JWT Debug Test', () => {
     console.log('localStorage contents:', localStorage);
 
     // If we have a JWT token, test it against our debug endpoint
-    const supabaseAuth = localStorage['sb-bhcqtfhvhrtftynrtslu-auth-token'];
+    const supabaseAuth = localStorage['sb-lahbaecgtipihprmjpwq-auth-token'];
     if (supabaseAuth) {
       console.log('Found Supabase auth token in localStorage');
       try {
@@ -123,4 +123,3 @@ test.describe('JWT Debug Test', () => {
     }
   });
 });
-

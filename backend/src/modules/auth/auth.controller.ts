@@ -1,5 +1,5 @@
 import { Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
+import { decodeJwt } from 'jose';
 import { SupabaseJwtGuard } from './supabase-jwt.guard';
 import { AuthService } from './auth.service';
 
@@ -27,30 +27,5 @@ export class AuthController {
     return {
       allowlisted: hasAccess,
     };
-  }
-
-  // Debug endpoint - remove in production
-  @Post('debug-token')
-  async debugToken(@Request() req: any) {
-    const auth = req.headers['authorization'];
-    if (!auth || !auth.startsWith('Bearer ')) {
-      return { error: 'Missing bearer token' };
-    }
-
-    const token = auth.slice('Bearer '.length);
-
-    try {
-      const decoded = jwt.decode(token, { complete: true });
-      return {
-        header: decoded?.header,
-        payload: decoded?.payload,
-        validFormat: true,
-      };
-    } catch (error) {
-      return {
-        error: 'Failed to decode token',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
   }
 }

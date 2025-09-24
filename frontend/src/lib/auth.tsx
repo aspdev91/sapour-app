@@ -30,6 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentSessionUserId, setCurrentSessionUserId] = useState<string | null>(null);
 
   const checkAuth = async () => {
     try {
@@ -80,26 +81,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
+    let isInitialCheck = true;
+
     // Listen for Supabase auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       console.log('Supabase auth state change:', event, session?.user?.email);
 
-      if (event === 'SIGNED_IN' && session) {
-        // User signed in with Supabase, now get user info from backend
+      if (event === 'SIGNED_IN' && session && session.user.id !== currentSessionUserId) {
+        setCurrentSessionUserId(session.user.id);
         await checkAuth();
       } else if (event === 'SIGNED_OUT') {
+        setCurrentSessionUserId(null);
         setUser(null);
         setError(null);
+        setLoading(false);
+      } else if (event === 'INITIAL_SESSION' && isInitialCheck) {
+        isInitialCheck = false;
+        if (session) {
+          setCurrentSessionUserId(session.user.id);
+          await checkAuth();
+        } else {
+          setLoading(false);
+        }
       }
     });
 
-    // Initial check
-    checkAuth();
-
     return () => subscription.unsubscribe();
-  }, []);
+  }, [currentSessionUserId]);
 
   const value: AuthContextType = {
     user,

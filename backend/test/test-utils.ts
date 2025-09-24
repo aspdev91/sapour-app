@@ -121,19 +121,11 @@ export async function createTestApp(): Promise<TestingModule> {
   })
     .overrideProvider(AuthService)
     .useValue({
-      verifyJwtAndGetUser: async () => ({
+      verifyToken: async () => ({
         email: 'test@example.com',
         userId: 'test-user-id',
       }),
-      checkAllowlist: async () => ({
-        email: 'test@example.com',
-        allowlisted: true,
-      }),
-      verifyTokenAndCheckAllowlist: async () => ({
-        email: 'test@example.com',
-        userId: 'test-user-id',
-        allowlisted: true,
-      }),
+      checkAdminAccess: async () => true,
     })
     .overrideGuard(SupabaseJwtGuard)
     .useValue({
@@ -253,19 +245,11 @@ export async function createIntegrationTestApp(
   })
     .overrideProvider(AuthService)
     .useValue({
-      verifyJwtAndGetUser: async () => ({
+      verifyToken: async () => ({
         email: adminEmail,
         userId: 'test-user-id',
       }),
-      checkAllowlist: async () => ({
-        email: adminEmail,
-        allowlisted: true,
-      }),
-      verifyTokenAndCheckAllowlist: async () => ({
-        email: adminEmail,
-        userId: 'test-user-id',
-        allowlisted: true,
-      }),
+      checkAdminAccess: async () => true,
     })
     .overrideGuard(SupabaseJwtGuard)
     .useValue({

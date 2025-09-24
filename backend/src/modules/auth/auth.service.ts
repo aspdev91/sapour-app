@@ -1,73 +1,43 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { createClient } from '@supabase/supabase-js';
-import * as jwt from 'jsonwebtoken';
-import { JwksClient } from 'jwks-rsa';
+import { createRemoteJWKSet, jwtVerify, JWTPayload, decodeProtectedHeader, decodeJwt } from 'jose';
 import { PrismaService } from '../../shared/prisma.service';
 
-interface DecodedToken {
+interface DecodedToken extends JWTPayload {
   sub: string;
-  email: string;
-  aud: string;
-  exp: number;
-  iat: number;
-  iss: string;
-  [key: string]: any;
+  email?: string;
 }
 
 @Injectable()
 export class AuthService {
-  private readonly supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-  );
-
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly jwksClient = new JwksClient({
-    jwksUri: process.env.SUPABASE_JWT_JWKS_URL || '',
-    rateLimit: true,
-    cache: true,
-    cacheMaxEntries: 5,
-    cacheMaxAge: 600000, // 10 minutes
-    requestHeaders: {
-      apikey: process.env.SUPABASE_ANON_KEY || '',
-    },
-  });
+  private get projectJwks() {
+    console.log('process.env.SUPABASE_URL', process.env.SUPABASE_URL);
+    // Create fresh JWK set each time to avoid caching issues
+    return createRemoteJWKSet(new URL(`${process.env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`));
+  }
 
-  async verifyJwtAndGetUser(token: string): Promise<{ email: string; userId: string }> {
+  async verifyToken(token: string): Promise<{ email: string; userId: string }> {
     try {
-      // Decode the token without verification first to get the kid and debug info
-      const decodedHeader = jwt.decode(token, { complete: true });
-      if (!decodedHeader || typeof decodedHeader === 'string') {
-        throw new Error('Invalid JWT token format');
-      }
+      const header = decodeProtectedHeader(token);
+      console.log('JWT header:', header);
+      console.log('JWT payload:', decodeJwt(token));
 
-      console.log('JWT Header:', decodedHeader.header);
-      console.log('JWT Payload:', decodedHeader.payload);
+      // Fetch and log the JWKS
+      const jwksUrl = `${process.env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`;
+      const jwksResponse = await fetch(jwksUrl);
+      const jwks = await jwksResponse.json();
+      console.log('JWKS:', JSON.stringify(jwks, null, 2));
 
-      const kid = decodedHeader.header.kid;
-      if (!kid) {
-        throw new Error('Missing key ID in JWT header');
-      }
+      const { payload } = await jwtVerify(token, this.projectJwks);
+      const decoded = payload as DecodedToken;
 
-      // Get the signing key from JWKS
-      const key = await this.jwksClient.getSigningKey(kid);
-      const signingKey = key.getPublicKey();
-
-      // Verify the JWT token with more flexible validation
-      const decoded = jwt.verify(token, signingKey, {
-        issuer: `${process.env.SUPABASE_URL}/auth/v1`,
-        algorithms: ['RS256'],
-      }) as DecodedToken;
-
-      console.log('Verified JWT payload:', decoded);
-
-      if (!decoded.sub || !decoded.email) {
-        throw new Error('Invalid token payload - missing sub or email');
+      if (!decoded.sub) {
+        throw new Error('Invalid token payload - missing sub');
       }
 
       return {
-        email: decoded.email,
+        email: decoded.email || '',
         userId: decoded.sub,
       };
     } catch (error) {
@@ -76,24 +46,12 @@ export class AuthService {
     }
   }
 
-  async verifyToken(token: string): Promise<{
-    email: string;
-    userId: string;
-  }> {
-    return await this.verifyJwtAndGetUser(token);
-  }
-
   async checkAdminAccess(email: string): Promise<boolean> {
-    try {
-      const admin = await this.prisma.admin.findUnique({
-        where: { email },
-        select: { id: true },
-      });
-      return !!admin;
-    } catch (error) {
-      // For debugging, allow all emails to pass admin check
-      console.log('Database check failed, allowing access for debugging:', email);
-      return true;
-    }
+    console.log('Checking admin access for email:', email);
+    const admin = await this.prisma.admin.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    return !!admin;
   }
 }
