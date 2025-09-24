@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { authApi } from './api-client';
 import { supabase } from './supabase';
 
@@ -31,8 +31,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentSessionUserId, setCurrentSessionUserId] = useState<string | null>(null);
+  const isCheckingAuthRef = useRef(false);
 
   const checkAuth = async () => {
+    if (isCheckingAuthRef.current) {
+      console.log('checkAuth already in progress, skipping');
+      return;
+    }
+
+    isCheckingAuthRef.current = true;
     try {
       setLoading(true);
       setError(null);
@@ -71,6 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       console.log('checkAuth completed');
       setLoading(false);
+      isCheckingAuthRef.current = false;
     }
   };
 
@@ -81,7 +89,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    let isInitialCheck = true;
+    // Check for existing session on mount
+    checkAuth();
 
     // Listen for Supabase auth state changes
     const {
@@ -97,19 +106,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
         setError(null);
         setLoading(false);
-      } else if (event === 'INITIAL_SESSION' && isInitialCheck) {
-        isInitialCheck = false;
-        if (session) {
-          setCurrentSessionUserId(session.user.id);
-          await checkAuth();
-        } else {
-          setLoading(false);
-        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [currentSessionUserId]);
+  }, []);
 
   const value: AuthContextType = {
     user,

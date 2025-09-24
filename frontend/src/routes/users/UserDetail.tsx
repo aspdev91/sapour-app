@@ -2,19 +2,26 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { 
-  UserIcon, 
-  CalendarIcon, 
-  ImageIcon, 
-  MicIcon, 
-  FileTextIcon, 
+import {
+  UserIcon,
+  CalendarIcon,
+  ImageIcon,
+  MicIcon,
+  FileTextIcon,
   Loader2Icon,
   PlayIcon,
   EyeIcon,
-  PlusIcon 
+  PlusIcon,
+  UploadIcon,
+  CheckIcon,
+  AlertCircleIcon,
 } from 'lucide-react';
-import { apiClient, type User, type Media, type Report } from '@/lib/api-client';
+import IconWrapper from '@/components/IconWrapper';
+import { apiClient, type User, type Media, type Report, type MediaType } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 interface UserWithDetails extends User {
@@ -22,11 +29,36 @@ interface UserWithDetails extends User {
   reports: Report[];
 }
 
+interface UploadState {
+  file: File | null;
+  uploading: boolean;
+  progress: number;
+  completed: boolean;
+  error: string | null;
+  mediaId: string | null;
+}
+
 export default function UserDetail() {
   const { userId } = useParams<{ userId: string }>();
   const [user, setUser] = useState<UserWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageUpload, setImageUpload] = useState<UploadState>({
+    file: null,
+    uploading: false,
+    progress: 0,
+    completed: false,
+    error: null,
+    mediaId: null,
+  });
+  const [audioUpload, setAudioUpload] = useState<UploadState>({
+    file: null,
+    uploading: false,
+    progress: 0,
+    completed: false,
+    error: null,
+    mediaId: null,
+  });
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -61,7 +93,9 @@ export default function UserDetail() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">User Details</h1>
-          <p className="text-gray-600 mt-2">View user profile, media gallery, and generated reports</p>
+          <p className="text-gray-600 mt-2">
+            View user profile, media gallery, and generated reports
+          </p>
         </div>
         <Card>
           <CardHeader>
@@ -88,6 +122,163 @@ export default function UserDetail() {
     const config = variants[status];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
+
+  const handleFileUpload = async (file: File, type: MediaType, setState: typeof setImageUpload) => {
+    if (!userId) {
+      toast.error('User ID not found');
+      return;
+    }
+
+    setState((prev) => ({ ...prev, file, uploading: true, progress: 0, error: null }));
+
+    try {
+      // Create signed URL
+      const { uploadUrl, mediaId } = await apiClient.createSignedUrl({
+        userId,
+        type,
+        contentType: file.type,
+      });
+
+      setState((prev) => ({ ...prev, progress: 25 }));
+
+      // Upload file to signed URL
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Upload failed');
+      }
+
+      setState((prev) => ({ ...prev, progress: 75 }));
+
+      // Trigger analysis
+      await apiClient.triggerAnalysis(mediaId);
+
+      setState((prev) => ({
+        ...prev,
+        progress: 100,
+        completed: true,
+        uploading: false,
+        mediaId,
+      }));
+
+      toast.success(`${type} uploaded successfully`);
+
+      // Refresh user data to show new media
+      const userData = await apiClient.getUser(userId);
+      setUser(userData);
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Upload failed',
+        uploading: false,
+        progress: 0,
+      }));
+      toast.error(`Failed to upload ${type}`);
+    }
+  };
+
+  const renderUploadArea = (
+    type: MediaType,
+    upload: UploadState,
+    setState: typeof setImageUpload,
+    accept: string,
+  ) => (
+    <div className="space-y-3">
+      <Label htmlFor={`${type}-upload`} className="text-sm font-medium">
+        {type === 'image' ? 'Profile Image' : 'Voice Sample'} {upload.completed && '✓'}
+      </Label>
+
+      {!upload.file ? (
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+          <input
+            id={`${type}-upload`}
+            type="file"
+            accept={accept}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setState((prev) => ({ ...prev, file }));
+              }
+            }}
+            className="hidden"
+          />
+          <Label htmlFor={`${type}-upload`} className="cursor-pointer">
+            <IconWrapper
+              IconComponent={UploadIcon}
+              className="w-8 h-8 mx-auto mb-2 text-gray-400"
+            />
+            <p className="text-sm text-gray-600">
+              Click to upload {type === 'image' ? 'an image' : 'audio'} or drag and drop
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {type === 'image' ? 'PNG, JPG up to 10MB' : 'MP3, WAV up to 10MB'}
+            </p>
+          </Label>
+        </div>
+      ) : (
+        <div className="border rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {upload.completed ? (
+                <IconWrapper IconComponent={CheckIcon} className="w-5 h-5 text-green-500" />
+              ) : upload.error ? (
+                <IconWrapper IconComponent={AlertCircleIcon} className="w-5 h-5 text-red-500" />
+              ) : (
+                <IconWrapper IconComponent={UploadIcon} className="w-5 h-5 text-blue-500" />
+              )}
+              <span className="text-sm font-medium truncate max-w-48">{upload.file.name}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                setState({
+                  file: null,
+                  uploading: false,
+                  progress: 0,
+                  completed: false,
+                  error: null,
+                  mediaId: null,
+                })
+              }
+              disabled={upload.uploading}
+            >
+              Remove
+            </Button>
+          </div>
+
+          {upload.uploading && (
+            <div className="space-y-2">
+              <Progress value={upload.progress} />
+              <p className="text-xs text-gray-500">Uploading... {upload.progress}%</p>
+            </div>
+          )}
+
+          {upload.error && <p className="text-xs text-red-500">{upload.error}</p>}
+
+          {upload.file && !upload.completed && !upload.uploading && (
+            <Button
+              size="sm"
+              onClick={() => handleFileUpload(upload.file!, type, setState)}
+              className="w-full"
+            >
+              Upload {type}
+            </Button>
+          )}
+
+          {upload.completed && (
+            <p className="text-xs text-green-600">✓ {type} uploaded and analysis started</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -148,21 +339,23 @@ export default function UserDetail() {
               <ImageIcon className="w-5 h-5" />
               Media Gallery ({user.media.length})
             </span>
-            <Button asChild variant="outline" size="sm">
-              <Link to={`/users/${user.id}/upload`}>
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Add Media
-              </Link>
+            <Button variant="outline" size="sm" onClick={() => {}}>
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Add Media
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Upload Areas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {renderUploadArea('image', imageUpload, setImageUpload, 'image/*')}
+            {renderUploadArea('audio', audioUpload, setAudioUpload, 'audio/*')}
+          </div>
+
+          {/* Media Gallery */}
           {user.media.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">No media files uploaded yet</p>
-              <Button asChild variant="outline" className="mt-4">
-                <Link to={`/users/${user.id}/upload`}>Upload First Media</Link>
-              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -215,9 +408,7 @@ export default function UserDetail() {
                       </div>
                     )}
 
-                    {media.error && (
-                      <p className="text-xs text-destructive mt-2">{media.error}</p>
-                    )}
+                    {media.error && <p className="text-xs text-destructive mt-2">{media.error}</p>}
                   </CardContent>
                 </Card>
               ))}
@@ -263,7 +454,9 @@ export default function UserDetail() {
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                           <span>Generated {new Date(report.createdAt).toLocaleDateString()}</span>
                           <span>•</span>
-                          <span>{report.aiProviderName} {report.aiModelName}</span>
+                          <span>
+                            {report.aiProviderName} {report.aiModelName}
+                          </span>
                           <span>•</span>
                           <span>Rev: {report.templateRevisionLabel}</span>
                         </div>

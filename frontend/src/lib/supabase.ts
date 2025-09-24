@@ -5,7 +5,14 @@ console.log('supabaseUrl', supabaseUrl);
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Supabase client - must be configured
-export const supabase = createClient(supabaseUrl, supabasePublishableKey);
+export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+  auth: {
+    persistSession: true,
+    storage: window.localStorage,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 
 // Helper function to get the current session token
 export const getSupabaseToken = async (): Promise<string | null> => {

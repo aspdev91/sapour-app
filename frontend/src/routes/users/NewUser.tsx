@@ -163,7 +163,10 @@ export default function NewUser() {
             htmlFor={`${type}-upload`}
             className={`cursor-pointer ${!userId ? 'opacity-50' : ''}`}
           >
-            <IconWrapper IconComponent={UploadIcon} className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <IconWrapper
+              IconComponent={UploadIcon}
+              className="w-8 h-8 mx-auto mb-2 text-gray-400"
+            />
             <p className="text-sm text-gray-600">
               {!userId
                 ? 'Create user first to enable upload'
@@ -293,12 +296,17 @@ export default function NewUser() {
           ) : (
             <Button
               type="button"
-              onClick={() => navigate(`/users/${userId}`)}
-              disabled={!imageUpload.completed && !audioUpload.completed}
+              onClick={() => {
+                if (!imageUpload.completed && !audioUpload.completed) {
+                  toast.error(
+                    'Please upload at least one photo or audio file before viewing the user profile',
+                  );
+                  return;
+                }
+                navigate(`/users/${userId}`);
+              }}
             >
-              {imageUpload.completed || audioUpload.completed
-                ? 'View User Profile'
-                : 'Upload media first'}
+              View User Profile
             </Button>
           )}
         </div>
