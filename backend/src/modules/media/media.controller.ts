@@ -1,20 +1,19 @@
 import { Body, Controller, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard';
-import { MediaService, CreateSignedUrlDto } from './media.service';
+import { MediaService, CreateMediaDto } from './media.service';
 
 @Controller('media')
 @UseGuards(SupabaseJwtGuard)
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
-  @Post('signed-url')
+  @Post()
   @HttpCode(201)
-  async signedUrl(@Body() body: CreateSignedUrlDto) {
-    const result = await this.mediaService.createSignedUploadUrl(body);
+  async createMedia(@Body() body: CreateMediaDto) {
+    const result = await this.mediaService.createMediaAfterUpload(body);
     return {
-      uploadUrl: result.uploadUrl,
-      storagePath: result.storagePath,
       mediaId: result.mediaId,
+      status: 'processing',
     };
   }
 

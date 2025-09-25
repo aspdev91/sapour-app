@@ -74,12 +74,6 @@ export interface UserResponse {
   hasAccess: boolean;
 }
 
-export interface SignedUrlResponse {
-  uploadUrl: string;
-  storagePath: string;
-  mediaId: UUID;
-}
-
 export interface TemplateRevision {
   id: string;
   label: string;
@@ -191,12 +185,12 @@ class BaseApiClient {
   }
 
   // Media endpoints
-  async createSignedUrl(data: {
+  async createMedia(data: {
     userId: UUID;
     type: MediaType;
-    contentType: string;
-  }): Promise<SignedUrlResponse> {
-    return this.request('/media/signed-url', {
+    storagePath: string;
+  }): Promise<{ mediaId: UUID; status: string }> {
+    return this.request('/media', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -252,8 +246,8 @@ export const usersApi = {
 };
 
 export const mediaApi = {
-  createSignedUrl: (data: { userId: UUID; type: MediaType; contentType: string }) =>
-    apiClient.createSignedUrl(data),
+  createMedia: (data: { userId: UUID; type: MediaType; storagePath: string }) =>
+    apiClient.createMedia(data),
   triggerAnalysis: (mediaId: UUID) => apiClient.triggerAnalysis(mediaId),
 };
 

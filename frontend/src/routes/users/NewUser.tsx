@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import IconWrapper from '@/components/IconWrapper';
 import { UploadIcon, CheckIcon, AlertCircleIcon, Loader2Icon } from 'lucide-react';
 import { apiClient, type MediaType } from '@/lib/api-client';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 const createUserSchema = z.object({
@@ -66,39 +67,39 @@ export default function NewUser() {
     setState((prev) => ({ ...prev, file, uploading: true, progress: 0, error: null }));
 
     try {
-      // Create signed URL
-      const { uploadUrl, mediaId } = await apiClient.createSignedUrl({
-        userId,
-        type,
-        contentType: file.type,
-      });
+      // Generate unique storage path
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      const bucket = type === 'image' ? 'user-submitted-photos' : 'user-submitted-audio';
+      const storagePath = `${userId}/${timestamp}-${randomSuffix}`;
+      const fullPath = `${bucket}/${storagePath}`;
 
       setState((prev) => ({ ...prev, progress: 25 }));
 
-      // Upload file to signed URL
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
+      // Upload file directly to Supabase Storage
+      const { error } = await supabase.storage.from(bucket).upload(storagePath, file, {
+        contentType: file.type,
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error('Upload failed');
+      if (error) {
+        throw new Error(`Upload failed: ${error.message}`);
       }
 
       setState((prev) => ({ ...prev, progress: 75 }));
 
-      // Trigger analysis
-      await apiClient.triggerAnalysis(mediaId);
+      // Create media record and trigger analysis
+      const result = await apiClient.createMedia({
+        userId,
+        type,
+        storagePath: fullPath,
+      });
 
       setState((prev) => ({
         ...prev,
         progress: 100,
         completed: true,
         uploading: false,
-        mediaId,
+        mediaId: result.mediaId,
       }));
 
       toast.success(`${type} uploaded successfully`);

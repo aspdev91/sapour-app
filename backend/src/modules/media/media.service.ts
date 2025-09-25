@@ -8,19 +8,13 @@ import { PrismaService } from '../../shared/prisma.service';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-const CreateSignedUrlSchema = z.object({
+const CreateMediaSchema = z.object({
   userId: z.string().uuid(),
   type: z.enum(['image', 'audio']),
-  contentType: z.string().min(1),
+  storagePath: z.string().min(1),
 });
 
-export type CreateSignedUrlDto = z.infer<typeof CreateSignedUrlSchema>;
-
-export interface SignedUrlResponse {
-  uploadUrl: string;
-  storagePath: string;
-  mediaId: string;
-}
+export type CreateMediaDto = z.infer<typeof CreateMediaSchema>;
 
 @Injectable()
 export class MediaService {
@@ -30,8 +24,8 @@ export class MediaService {
     process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   );
 
-  async createSignedUploadUrl(data: CreateSignedUrlDto): Promise<SignedUrlResponse> {
-    const validatedData = CreateSignedUrlSchema.parse(data);
+  async createMediaAfterUpload(data: CreateMediaDto): Promise<{ mediaId: string }> {
+    const validatedData = CreateMediaSchema.parse(data);
 
     // Verify user exists
     const user = await this.prisma.user.findUnique({
@@ -42,50 +36,28 @@ export class MediaService {
       throw new NotFoundException('User not found');
     }
 
-    // Generate unique storage path
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const bucket =
-      validatedData.type === 'image'
-        ? process.env.SUPABASE_STORAGE_BUCKET_IMAGES || 'images'
-        : process.env.SUPABASE_STORAGE_BUCKET_AUDIO || 'audio';
-
-    const storagePath = `${validatedData.userId}/${timestamp}-${randomSuffix}`;
-    const fullPath = `${bucket}/${storagePath}`;
-
     try {
-      // Generate signed upload URL
-      const { data: urlData, error } = await this.supabase.storage
-        .from(bucket)
-        .createSignedUploadUrl(storagePath);
-
-      if (error) {
-        throw new InternalServerErrorException(
-          `Failed to create signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
-      }
-
-      // Create media record in pending state
+      // Create media record in processing state and trigger analysis
       const media = await this.prisma.media.create({
         data: {
           userId: validatedData.userId,
           type: validatedData.type as 'image' | 'audio',
-          storagePath: fullPath,
-          status: 'pending',
+          storagePath: validatedData.storagePath,
+          status: 'processing',
         },
       });
 
-      return {
-        uploadUrl: urlData.signedUrl,
-        storagePath: fullPath,
-        mediaId: media.id,
-      };
-    } catch (error) {
-      if (error instanceof InternalServerErrorException) {
-        throw error;
+      // Trigger analysis based on media type
+      if (media.type === 'image') {
+        await this.triggerImageAnalysis(media.id, media);
+      } else if (media.type === 'audio') {
+        await this.triggerAudioAnalysis(media.id, media);
       }
+
+      return { mediaId: media.id };
+    } catch (error) {
       throw new InternalServerErrorException(
-        `Storage operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Media creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }

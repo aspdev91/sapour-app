@@ -32,6 +32,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [error, setError] = useState<string | null>(null);
   const [currentSessionUserId, setCurrentSessionUserId] = useState<string | null>(null);
   const isCheckingAuthRef = useRef(false);
+  const isAuthenticatedRef = useRef(false);
 
   const checkAuth = async () => {
     if (isCheckingAuthRef.current) {
@@ -64,12 +65,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (session) {
         // User is signed in with Supabase, get additional info from backend
         console.log('Getting user info from backend...');
-        const userResponse = await authApi.getCurrentUser();
+        const userResponse = await Promise.race([
+          authApi.getCurrentUser(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Auth check timeout')), 10000),
+          ),
+        ]);
         console.log('User response:', userResponse);
         setUser(userResponse);
+        isAuthenticatedRef.current = true;
       } else {
         console.log('No session found');
         setUser(null);
+        isAuthenticatedRef.current = false;
       }
     } catch (err) {
       console.error('checkAuth error:', err);
@@ -77,6 +85,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Only set user to null if it's an authentication error (401), not network/server errors
       if (err instanceof Error && 'status' in err && (err as any).status === 401) {
         setUser(null);
+        isAuthenticatedRef.current = false;
       }
     } finally {
       console.log('checkAuth completed');
@@ -89,6 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await supabase.auth.signOut();
     setUser(null);
     setError(null);
+    isAuthenticatedRef.current = false;
   };
 
   useEffect(() => {
@@ -101,7 +111,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       console.log('Supabase auth state change:', event, session?.user?.email);
 
-      if (event === 'SIGNED_IN' && session && session.user.id !== currentSessionUserId) {
+      if (event === 'SIGNED_IN' && session && !isAuthenticatedRef.current) {
         setCurrentSessionUserId(session.user.id);
         await checkAuth();
       } else if (event === 'SIGNED_OUT') {
@@ -109,10 +119,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
         setError(null);
         setLoading(false);
-      } else if (event === 'TOKEN_REFRESHED' && session) {
-        console.log('Token refreshed, updating user info');
-        await checkAuth();
+        isAuthenticatedRef.current = false;
       }
+      // Note: TOKEN_REFRESHED no longer triggers checkAuth as user info doesn't change
     });
 
     return () => subscription.unsubscribe();
