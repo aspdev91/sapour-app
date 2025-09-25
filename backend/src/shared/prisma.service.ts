@@ -7,7 +7,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     try {
       await this.$connect();
     } catch (error) {
-      console.log('Database connection failed, skipping for debugging:', error.message);
+      console.log(
+        'Database connection failed, skipping for debugging:',
+        error instanceof Error ? error.message : String(error),
+      );
       // Don't throw error to allow app to start without database
     }
   }

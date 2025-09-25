@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   UserIcon,
   CalendarIcon,
@@ -157,7 +158,7 @@ export default function UserDetail() {
       const result = await apiClient.createMedia({
         userId,
         type,
-        storagePath: fullPath,
+        storagePath,
       });
 
       setState((prev) => ({
@@ -359,61 +360,110 @@ export default function UserDetail() {
               <p className="text-muted-foreground">No media files uploaded yet</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {user.media.map((media) => (
-                <Card key={media.id} className="relative">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      {media.type === 'image' ? (
-                        <ImageIcon className="w-6 h-6 text-blue-500" />
-                      ) : (
-                        <MicIcon className="w-6 h-6 text-green-500" />
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">
-                          {media.type === 'image' ? 'Profile Image' : 'Voice Sample'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(media.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {getStatusBadge(media.status)}
-                    </div>
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {user.media.map((media) => {
+                  const hasErrorDetails =
+                    media.status === 'failed' &&
+                    media.analysisJson &&
+                    typeof media.analysisJson === 'object';
+                  const errorDetails = hasErrorDetails ? (media.analysisJson as any) : null;
 
-                    {media.publicUrl && (
-                      <div className="mb-3">
-                        {media.type === 'image' ? (
-                          <img
-                            src={media.publicUrl}
-                            alt="Profile"
-                            className="w-full h-32 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="h-32 bg-muted rounded flex items-center justify-center">
-                            <PlayIcon className="w-8 h-8 text-muted-foreground" />
+                  const MediaCard = (
+                    <Card key={media.id} className="relative">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          {media.type === 'image' ? (
+                            <ImageIcon className="w-6 h-6 text-blue-500" />
+                          ) : (
+                            <MicIcon className="w-6 h-6 text-green-500" />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">
+                              {media.type === 'image' ? 'Profile Image' : 'Voice Sample'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(media.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          {getStatusBadge(media.status)}
+                        </div>
+
+                        {media.publicUrl && (
+                          <div className="mb-3">
+                            {media.type === 'image' ? (
+                              <img
+                                src={media.publicUrl}
+                                alt="Profile"
+                                className="w-full h-32 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="h-32 bg-muted rounded flex items-center justify-center">
+                                <PlayIcon className="w-8 h-8 text-muted-foreground" />
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                    )}
 
-                    {media.analysisJson && (
-                      <div className="text-xs space-y-1">
-                        <p className="font-medium">Analysis Results:</p>
-                        <p className="text-muted-foreground">
-                          Provider: {media.provider} ({media.model})
-                        </p>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                          <EyeIcon className="w-3 h-3 mr-1" />
-                          View Details
-                        </Button>
-                      </div>
-                    )}
+                        {media.analysisJson && media.status === 'succeeded' && (
+                          <div className="text-xs space-y-1">
+                            <p className="font-medium">Analysis Results:</p>
+                            <p className="text-muted-foreground">
+                              Provider: {media.provider} ({media.model})
+                            </p>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                              <EyeIcon className="w-3 h-3 mr-1" />
+                              View Details
+                            </Button>
+                          </div>
+                        )}
 
-                    {media.error && <p className="text-xs text-destructive mt-2">{media.error}</p>}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        {media.error && (
+                          <p className="text-xs text-destructive mt-2">{media.error}</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+
+                  // Add tooltip for failed media with detailed error information
+                  if (media.status === 'failed' && errorDetails) {
+                    return (
+                      <Tooltip key={media.id}>
+                        <TooltipTrigger asChild>{MediaCard}</TooltipTrigger>
+                        <TooltipContent className="max-w-sm">
+                          <div className="space-y-2">
+                            <p className="font-medium text-destructive">Analysis Failed</p>
+                            <div className="text-xs space-y-1">
+                              <p>
+                                <strong>Error:</strong> {errorDetails.message || media.error}
+                              </p>
+                              {errorDetails.timestamp && (
+                                <p>
+                                  <strong>Time:</strong>{' '}
+                                  {new Date(errorDetails.timestamp).toLocaleString()}
+                                </p>
+                              )}
+                              {errorDetails.mediaId && (
+                                <p>
+                                  <strong>Media ID:</strong> {errorDetails.mediaId}
+                                </p>
+                              )}
+                              {errorDetails.storagePath && (
+                                <p>
+                                  <strong>File:</strong> {errorDetails.storagePath.split('/').pop()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  return MediaCard;
+                })}
+              </div>
+            </TooltipProvider>
           )}
         </CardContent>
       </Card>

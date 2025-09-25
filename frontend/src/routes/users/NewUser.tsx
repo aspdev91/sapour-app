@@ -91,7 +91,7 @@ export default function NewUser() {
       const result = await apiClient.createMedia({
         userId,
         type,
-        storagePath: fullPath,
+        storagePath,
       });
 
       setState((prev) => ({
