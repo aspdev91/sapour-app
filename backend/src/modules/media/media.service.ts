@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../../shared/prisma.service';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+// import sharp from 'sharp'; // TODO: Uncomment when sharp is installed
+import OpenAI from 'openai';
 
 const CreateMediaSchema = z.object({
   userId: z.string().uuid(),
@@ -18,11 +20,18 @@ export type CreateMediaDto = z.infer<typeof CreateMediaSchema>;
 
 @Injectable()
 export class MediaService {
-  constructor(private readonly prisma: PrismaService) {}
-  private readonly supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-  );
+  private readonly openai: OpenAI;
+
+  constructor(private readonly prisma: PrismaService) {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    this.supabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    );
+  }
+  private readonly supabase;
 
   async createMediaAfterUpload(data: CreateMediaDto): Promise<{ mediaId: string }> {
     const validatedData = CreateMediaSchema.parse(data);
@@ -36,22 +45,23 @@ export class MediaService {
       throw new NotFoundException('User not found');
     }
 
+    const dataType = validatedData.type as 'image' | 'audio';
+
     try {
-      // Create media record in processing state and trigger analysis
+      // Create media record in pending state (analysis will be triggered later during report generation)
       const media = await this.prisma.media.create({
         data: {
           userId: validatedData.userId,
-          type: validatedData.type as 'image' | 'audio',
+          type: dataType,
           storagePath: validatedData.storagePath,
-          status: 'processing',
+          status: dataType === 'image' ? 'succeeded' : 'pending',
         },
       });
 
-      // Trigger analysis based on media type
-      if (media.type === 'image') {
-        await this.triggerImageAnalysis(media.id, media);
-      } else if (media.type === 'audio') {
-        await this.triggerAudioAnalysis(media.id, media);
+      // Audio analysis can still be triggered immediately if needed
+      if (media.type === 'audio') {
+        // Trigger audio analysis asynchronously
+        this.triggerAudioAnalysis(media.id, media);
       }
 
       return { mediaId: media.id };
@@ -104,41 +114,139 @@ export class MediaService {
   }
 
   private async triggerImageAnalysis(mediaId: string, media: any): Promise<void> {
-    // TODO: Implement OpenAI Vision analysis
-    // For now, simulate processing
-    setTimeout(async () => {
-      try {
-        // Simulate OpenAI Vision call
-        const mockAnalysis = {
+    console.log(
+      `[ImageAnalysis] Starting analysis for mediaId: ${mediaId}, storagePath: ${media.storagePath}`,
+    );
+
+    try {
+      // Get the image file from Supabase storage
+      const bucket = process.env.SUPABASE_STORAGE_BUCKET_IMAGES || 'user-submitted-images';
+      console.log(`[ImageAnalysis] Downloading image from Supabase: ${media.storagePath}`);
+      const { data: fileData, error: downloadError } = await this.supabase.storage
+        .from(bucket)
+        .download(media.storagePath);
+
+      if (downloadError) {
+        console.error(`[ImageAnalysis] Supabase download error:`, downloadError);
+        throw new Error(`Failed to download image from Supabase: ${downloadError.message}`);
+      }
+
+      if (!fileData) {
+        console.error(`[ImageAnalysis] No file data returned from Supabase`);
+        throw new Error('Image file not found in storage');
+      }
+
+      // Convert blob to buffer
+      console.log(`[ImageAnalysis] Converting file to buffer`);
+      const buffer = Buffer.from(await fileData.arrayBuffer());
+      console.log(`[ImageAnalysis] Original file size: ${buffer.length} bytes`);
+
+      // TODO: Resize image to 768px longest side using sharp (when installed)
+      console.log(`[ImageAnalysis] Resizing image to 768px longest side`);
+      // const resizedBuffer = await sharp(buffer)
+      //   .resize(768, 768, {
+      //     fit: 'inside',
+      //     withoutEnlargement: true,
+      //   })
+      //   .jpeg({ quality: 85 }) // Convert to JPEG for consistency
+      //   .toBuffer();
+      const resizedBuffer = buffer; // Placeholder: use original buffer until sharp is installed
+
+      console.log(`[ImageAnalysis] Resized file size: ${resizedBuffer.length} bytes`);
+
+      // Convert buffer to base64 for OpenAI API
+      const base64Image = resizedBuffer.toString('base64');
+      const dataUrl = `data:image/jpeg;base64,${base64Image}`;
+
+      console.log(`[ImageAnalysis] Sending to OpenAI Vision API`);
+
+      // Call OpenAI Vision API
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4-vision-preview',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: "Analyze this image and provide a detailed description of what you see, including the person's appearance, facial expression, mood, setting, and any other relevant details that could be useful for personality analysis.",
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: dataUrl,
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      const analysisText = response.choices[0]?.message?.content || '';
+      if (!analysisText) {
+        throw new Error('Empty response from OpenAI Vision API');
+      }
+
+      console.log(`[ImageAnalysis] Analysis completed successfully`);
+
+      // Store the analysis result
+      const analysisData = {
+        provider: 'openai_vision',
+        model: 'gpt-4-vision-preview',
+        analysis: {
+          description: analysisText,
+          timestamp: new Date().toISOString(),
+          imageMetadata: {
+            originalSize: buffer.length,
+            resizedSize: resizedBuffer.length,
+            maxDimension: 768,
+          },
+        },
+      };
+
+      await this.prisma.media.update({
+        where: { id: mediaId },
+        data: {
+          status: 'succeeded',
           provider: 'openai_vision',
           model: 'gpt-4-vision-preview',
-          analysis: {
-            description: 'Mock image analysis result',
-            objects: ['person', 'background'],
-            mood: 'neutral',
-            timestamp: new Date().toISOString(),
-          },
-        };
+          analysisJson: analysisData,
+          error: null, // Clear any previous error
+        },
+      });
 
-        await this.prisma.media.update({
-          where: { id: mediaId },
-          data: {
-            status: 'succeeded',
-            provider: 'openai_vision',
-            model: 'gpt-4-vision-preview',
-            analysisJson: mockAnalysis,
-          },
-        });
-      } catch (error) {
-        await this.prisma.media.update({
-          where: { id: mediaId },
-          data: {
-            status: 'failed',
-            error: `Image analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          },
-        });
+      console.log(`[ImageAnalysis] Analysis completed successfully for mediaId: ${mediaId}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      console.error(`[ImageAnalysis] Analysis failed for mediaId ${mediaId}:`, errorMessage);
+      if (errorStack) {
+        console.error(`[ImageAnalysis] Error stack:`, errorStack);
       }
-    }, 2000); // Simulate 2-second processing time
+
+      // Store detailed error information
+      const errorData = {
+        message: errorMessage,
+        timestamp: new Date().toISOString(),
+        mediaId: mediaId,
+        storagePath: media.storagePath,
+        stack: errorStack,
+      };
+
+      await this.prisma.media.update({
+        where: { id: mediaId },
+        data: {
+          status: 'failed',
+          error: errorMessage,
+          analysisJson: errorData, // Store error details in analysisJson for debugging
+        },
+      });
+
+      console.log(`[ImageAnalysis] Error stored in database for mediaId: ${mediaId}`);
+    }
   }
 
   private async triggerAudioAnalysis(mediaId: string, media: any): Promise<void> {
@@ -358,5 +466,37 @@ export class MediaService {
     }
 
     return media;
+  }
+
+  async triggerImageAnalysisForReport(userId: string, limit = 5): Promise<void> {
+    // Get the latest pending image media for the user, limited to the specified number
+    const pendingImages = await this.prisma.media.findMany({
+      where: {
+        userId: userId,
+        type: 'image',
+        status: 'pending',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+
+    if (pendingImages.length === 0) {
+      console.log(`[ReportAnalysis] No pending images found for user ${userId}`);
+      return;
+    }
+
+    console.log(
+      `[ReportAnalysis] Triggering analysis for ${pendingImages.length} images for user ${userId}`,
+    );
+
+    // Trigger analysis for each image asynchronously
+    const analysisPromises = pendingImages.map((media) =>
+      this.triggerImageAnalysis(media.id, media),
+    );
+
+    // Wait for all analyses to complete
+    await Promise.allSettled(analysisPromises);
+
+    console.log(`[ReportAnalysis] Completed triggering analysis for user ${userId}`);
   }
 }

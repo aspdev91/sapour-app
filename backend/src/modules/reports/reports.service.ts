@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../shared/prisma.service';
 import OpenAI from 'openai';
 import { TemplatesService, TemplateType } from '../templates/templates.service';
+import { MediaService } from '../media/media.service';
 import { z } from 'zod';
 
 const CreateReportSchema = z.object({
@@ -49,6 +50,7 @@ export class ReportsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly templatesService: TemplatesService,
+    private readonly mediaService: MediaService,
   ) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -79,6 +81,16 @@ export class ReportsService {
       throw new NotFoundException('Primary user not found');
     }
 
+    // Trigger image analysis for primary user before generating report
+    try {
+      await this.mediaService.triggerImageAnalysisForReport(validatedData.primaryUserId, 5);
+    } catch (error) {
+      console.warn(
+        `Failed to trigger image analysis for primary user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      // Continue with report generation even if image analysis fails
+    }
+
     let secondaryUser = null;
     if (validatedData.secondaryUserId) {
       secondaryUser = await this.prisma.user.findUnique({
@@ -99,6 +111,16 @@ export class ReportsService {
 
       if (!secondaryUser) {
         throw new NotFoundException('Secondary user not found');
+      }
+
+      // Trigger image analysis for secondary user before generating report
+      try {
+        await this.mediaService.triggerImageAnalysisForReport(validatedData.secondaryUserId, 5);
+      } catch (error) {
+        console.warn(
+          `Failed to trigger image analysis for secondary user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+        // Continue with report generation even if image analysis fails
       }
     }
 
