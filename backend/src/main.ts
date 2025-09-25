@@ -5,9 +5,13 @@ import { AppModule } from './modules/app/app.module';
 import { ValidationPipe } from './shared/validation.pipe';
 import { SentryInterceptor } from './shared/sentry.interceptor';
 import { LoggerService } from './shared/logger.service';
+import { validateEnvironmentVariables } from './shared/env-validation';
 
 // Load environment variables from .env file
 config();
+
+// Validate that all required environment variables are set
+validateEnvironmentVariables();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

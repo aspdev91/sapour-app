@@ -43,7 +43,6 @@ export class AuthService {
   }
 
   async checkAdminAccess(email: string): Promise<boolean> {
-    console.log('Checking admin access for email:', email);
     const admin = await this.prisma.admin.findUnique({
       where: { email },
       select: { id: true },
