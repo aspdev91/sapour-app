@@ -74,7 +74,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (err) {
       console.error('checkAuth error:', err);
       setError(err instanceof Error ? err.message : 'Authentication failed');
-      setUser(null);
+      // Only set user to null if it's an authentication error (401), not network/server errors
+      if (err instanceof Error && 'status' in err && (err as any).status === 401) {
+        setUser(null);
+      }
     } finally {
       console.log('checkAuth completed');
       setLoading(false);
@@ -106,6 +109,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(null);
         setError(null);
         setLoading(false);
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('Token refreshed, updating user info');
+        await checkAuth();
       }
     });
 
