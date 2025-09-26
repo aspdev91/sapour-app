@@ -35,7 +35,11 @@ export interface UserDetail {
   }>;
   reports: Array<{
     id: string;
-    reportType: string;
+    // TODO: Update when schema migration is complete
+    // templateId: string;
+    // templateRevisionId: string;
+    aiProviderName: string;
+    aiModelName: string;
     createdAt: Date;
   }>;
 }
@@ -117,7 +121,9 @@ export class UsersService {
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,
-            reportType: true,
+            aiProviderName: true,
+            aiModelName: true,
+            content: true,
             createdAt: true,
           },
         },
@@ -157,7 +163,9 @@ export class UsersService {
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,
-            reportType: true,
+            aiProviderName: true,
+            aiModelName: true,
+            content: true,
             createdAt: true,
           },
         },

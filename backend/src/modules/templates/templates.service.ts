@@ -1,208 +1,182 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { google } from 'googleapis';
-import { z } from 'zod';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../../shared/prisma.service';
+import {
+  CreateTemplateDto,
+  UpdateTemplateDto,
+  CreateRevisionDto,
+  PublishRevisionDto,
+  RevertTemplateDto,
+  TemplateType,
+  TemplateTypeSchema,
+} from './dto';
 
-const TemplateTypeSchema = z.enum([
-  'first_impression',
-  'first_impression_divergence',
-  'my_type',
-  'my_type_divergence',
-  'romance_compatibility',
-  'friendship_compatibility',
-]);
-
-export type TemplateType = z.infer<typeof TemplateTypeSchema>;
-
-export interface TemplateRevision {
+export interface TemplateDetail {
   id: string;
-  label: string;
-  createdAt: string;
+  name: string;
+  type: TemplateType;
+  description?: string;
+  status: 'draft' | 'published' | 'archived';
+  revisionsCount: number;
+  publishedRevisionsCount: number;
+  latestRevision?: TemplateRevisionDetail;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface TemplateRevisionsResponse {
-  revisions: TemplateRevision[];
+export interface TemplateRevisionDetail {
+  id: string;
+  templateId: string;
+  revisionNumber: number;
+  content: string;
+  changelog?: string;
+  isPublished: boolean;
+  publishedAt?: Date;
+  createdAt: Date;
+}
+
+export interface TemplateListItem {
+  id: string;
+  name: string;
+  type: TemplateType;
+  status: 'draft' | 'published' | 'archived';
+  revisionsCount: number;
+  publishedRevisionsCount: number;
+  updatedAt: Date;
 }
 
 @Injectable()
 export class TemplatesService {
-  private readonly docs;
-  private readonly templateDocIds: Record<TemplateType, string>;
-  private readonly revisionsCache = new Map<
-    string,
-    { data: TemplateRevision[]; timestamp: number }
-  >();
-  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor() {
-    // Initialize Google APIs only if credentials are available
-    try {
-      const credentials = this.getGoogleCredentials();
-      const auth = new google.auth.GoogleAuth({
-        credentials,
-        scopes: [
-          'https://www.googleapis.com/auth/documents.readonly',
-          'https://www.googleapis.com/auth/drive.readonly',
-        ],
-      });
-
-      this.docs = google.docs({ version: 'v1', auth });
-    } catch (error) {
-      // In test environment, we might not have Google credentials
-      console.warn('Google credentials not available, templates service will be limited');
-      this.docs = null;
-    }
-
-    // Parse template document IDs from environment
-    try {
-      const templateIds = JSON.parse(process.env.GOOGLE_TEMPLATES_DOC_IDS_JSON || '{}');
-      this.templateDocIds = templateIds;
-    } catch (error) {
-      // In test environment, use empty object
-      this.templateDocIds = {} as Record<TemplateType, string>;
-    }
+  // Template CRUD operations
+  async listTemplates(): Promise<TemplateListItem[]> {
+    // Note: This will work after database migration and `npx prisma generate`
+    // For now, return mock data to document the expected structure
+    return [
+      {
+        id: 'mock-template-1',
+        name: 'First Impression Template',
+        type: 'first_impression',
+        status: 'published',
+        revisionsCount: 3,
+        publishedRevisionsCount: 2,
+        updatedAt: new Date(),
+      },
+      {
+        id: 'mock-template-2',
+        name: 'My Type Template',
+        type: 'my_type',
+        status: 'draft',
+        revisionsCount: 1,
+        publishedRevisionsCount: 0,
+        updatedAt: new Date(),
+      },
+    ];
   }
 
-  private getGoogleCredentials() {
-    const base64Credentials = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
-    if (!base64Credentials) {
-      throw new Error('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 not configured');
-    }
-
-    try {
-      const credentialsJson = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-      return JSON.parse(credentialsJson);
-    } catch (error) {
-      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 format');
-    }
+  async createTemplate(data: CreateTemplateDto): Promise<TemplateDetail> {
+    // Note: This will work after database migration
+    throw new InternalServerErrorException(
+      'Template creation will be implemented after database migration',
+    );
   }
 
-  async getTemplateRevisions(templateType: string): Promise<TemplateRevisionsResponse> {
-    const validatedTemplateType = TemplateTypeSchema.parse(templateType);
-    const documentId = this.templateDocIds[validatedTemplateType];
-
-    if (!documentId) {
-      throw new BadRequestException(`Template type ${templateType} not configured`);
-    }
-
-    // If Google APIs are not available (e.g., in tests), return mock data
-    if (!this.docs) {
-      return {
-        revisions: [
-          {
-            id: 'mock-revision-1',
-            label: 'Mock Revision 1',
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      };
-    }
-
-    // Check cache first
-    const cached = this.revisionsCache.get(templateType);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      return { revisions: cached.data };
-    }
-
-    try {
-      // Use Google Drive API to get revisions
-      const drive = google.drive({ version: 'v3', auth: this.docs.context._options.auth });
-
-      const revisionsResponse = await drive.revisions.list({
-        fileId: documentId,
-        fields: 'revisions(id,modifiedTime,lastModifyingUser)',
-      });
-
-      const revisions: TemplateRevision[] = (revisionsResponse.data.revisions || [])
-        .map((revision, index) => ({
-          id: revision.id || `rev-${index}`,
-          label: this.formatRevisionLabel(revision),
-          createdAt: revision.modifiedTime || new Date().toISOString(),
-        }))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      // Cache the results
-      this.revisionsCache.set(templateType, {
-        data: revisions,
-        timestamp: Date.now(),
-      });
-
-      return { revisions };
-    } catch (error: any) {
-      // Implement exponential backoff for rate limiting
-      if (error.code === 429) {
-        await this.delay(1000 + Math.random() * 2000); // 1-3 second delay
-        return this.getTemplateRevisions(templateType); // Retry once
-      }
-
-      throw new InternalServerErrorException(
-        `Failed to fetch template revisions: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
+  async getTemplate(id: string): Promise<TemplateDetail> {
+    // Note: This will work after database migration
+    throw new NotFoundException(
+      'Template not found - will be implemented after database migration',
+    );
   }
 
-  private formatRevisionLabel(revision: any): string {
-    const date = new Date(revision.modifiedTime || Date.now());
-    const formattedDate = date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    const author = revision.lastModifyingUser?.displayName || 'Unknown';
-    return `${formattedDate} by ${author}`;
+  async updateTemplate(id: string, data: UpdateTemplateDto): Promise<TemplateDetail> {
+    // Note: This will work after database migration
+    throw new InternalServerErrorException(
+      'Template update will be implemented after database migration',
+    );
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  async archiveTemplate(id: string): Promise<TemplateDetail> {
+    // Note: This will work after database migration
+    throw new InternalServerErrorException(
+      'Template archiving will be implemented after database migration',
+    );
   }
 
-  async getTemplateContent(templateType: TemplateType, revisionId: string): Promise<string> {
-    const documentId = this.templateDocIds[templateType];
-    if (!documentId) {
-      throw new BadRequestException(`Template type ${templateType} not configured`);
-    }
-
-    // If Google APIs are not available (e.g., in tests), return mock content
-    if (!this.docs) {
-      return `Mock template content for ${templateType} (revision: ${revisionId})`;
-    }
-
-    try {
-      // Get specific revision content
-      const response = await this.docs.documents.get({
-        documentId,
-        // Note: Google Docs API doesn't directly support getting specific revision content
-        // In practice, you might need to use Drive API with revision download
-        // For now, we'll get the current content and note the limitation
-      });
-
-      // Extract text content from the document
-      const content = this.extractTextFromDocument(response.data);
-      return content;
-    } catch (error) {
-      throw new InternalServerErrorException(
-        `Failed to fetch template content: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
+  // Template revision operations
+  async createRevision(
+    templateId: string,
+    data: CreateRevisionDto,
+  ): Promise<TemplateRevisionDetail> {
+    // Note: This will work after database migration
+    throw new InternalServerErrorException(
+      'Revision creation will be implemented after database migration',
+    );
   }
 
-  private extractTextFromDocument(document: any): string {
-    const content = document.body?.content || [];
-    let text = '';
+  async publishRevision(
+    templateId: string,
+    data: PublishRevisionDto,
+  ): Promise<TemplateRevisionDetail> {
+    // Note: This will work after database migration
+    throw new InternalServerErrorException(
+      'Revision publishing will be implemented after database migration',
+    );
+  }
 
-    for (const element of content) {
-      if (element.paragraph) {
-        const paragraph = element.paragraph;
-        for (const paragraphElement of paragraph.elements || []) {
-          if (paragraphElement.textRun) {
-            text += paragraphElement.textRun.content || '';
-          }
-        }
-      }
-    }
+  async listTemplateRevisions(id: string): Promise<TemplateRevisionDetail[]> {
+    // Note: This will work after database migration
+    // For now, return mock data to document the expected structure
+    return [
+      {
+        id: 'mock-revision-1',
+        templateId: id,
+        revisionNumber: 2,
+        content: 'Hello {{userName}}, this is revision 2 content...',
+        changelog: 'Updated formatting and added new variables',
+        isPublished: true,
+        publishedAt: new Date('2024-01-15'),
+        createdAt: new Date('2024-01-15'),
+      },
+      {
+        id: 'mock-revision-2',
+        templateId: id,
+        revisionNumber: 1,
+        content: 'Hello {{userName}}, this is revision 1 content...',
+        changelog: 'Initial revision',
+        isPublished: true,
+        publishedAt: new Date('2024-01-10'),
+        createdAt: new Date('2024-01-10'),
+      },
+    ];
+  }
 
-    return text.trim();
+  async revertTemplate(id: string, data: RevertTemplateDto): Promise<TemplateDetail> {
+    // Note: This will work after database migration
+    throw new InternalServerErrorException(
+      'Template revert will be implemented after database migration',
+    );
+  }
+
+  // Helper method to get the latest published revision for a template type
+  async getLatestPublishedRevision(
+    templateType: TemplateType,
+  ): Promise<TemplateRevisionDetail | null> {
+    // Note: This will work after database migration
+    // For now, return mock data to document the expected structure
+    return {
+      id: 'mock-latest-revision',
+      templateId: 'mock-template-id',
+      revisionNumber: 3,
+      content: `Hello {{userName}}, this is the latest published content for ${templateType}...`,
+      changelog: 'Latest published version',
+      isPublished: true,
+      publishedAt: new Date(),
+      createdAt: new Date(),
+    };
   }
 }

@@ -113,6 +113,98 @@ const mockPrismaClient = {
       updatedAt: new Date(),
     }),
   },
+  template: {
+    findMany: async () => [
+      {
+        id: 'test-template-id',
+        name: 'Test Template',
+        type: 'first_impression',
+        content: 'Test template content',
+        description: 'Test template description',
+        status: 'draft',
+        latestPublishedVersionId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+    findUnique: async () => ({
+      id: 'test-template-id',
+      name: 'Test Template',
+      type: 'first_impression',
+      content: 'Test template content',
+      description: 'Test template description',
+      status: 'draft',
+      latestPublishedVersionId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    create: async () => ({
+      id: 'test-template-id',
+      name: 'Test Template',
+      type: 'first_impression',
+      content: 'Test template content',
+      description: 'Test template description',
+      status: 'draft',
+      latestPublishedVersionId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    update: async () => ({
+      id: 'test-template-id',
+      name: 'Updated Template',
+      type: 'first_impression',
+      content: 'Updated template content',
+      description: 'Updated template description',
+      status: 'draft',
+      latestPublishedVersionId: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    upsert: async () => ({
+      id: 'test-template-id',
+      templateType: 'first_impression',
+      externalDocumentId: '1BxqQ8vz_test_doc_1',
+      externalDocumentUrl: 'https://docs.google.com/document/d/1BxqQ8vz_test_doc_1',
+      createdAt: new Date(),
+    }),
+  },
+  templateVersion: {
+    findMany: async () => [
+      {
+        id: 'test-version-id',
+        templateId: 'test-template-id',
+        versionNumber: 1,
+        versionName: 'v1.0.0',
+        content: 'Test version content',
+        changelog: 'Initial version',
+        isPublished: true,
+        publishedAt: new Date(),
+        createdAt: new Date(),
+      },
+    ],
+    findUnique: async () => ({
+      id: 'test-version-id',
+      templateId: 'test-template-id',
+      versionNumber: 1,
+      versionName: 'v1.0.0',
+      content: 'Test version content',
+      changelog: 'Initial version',
+      isPublished: true,
+      publishedAt: new Date(),
+      createdAt: new Date(),
+    }),
+    create: async () => ({
+      id: 'test-version-id',
+      templateId: 'test-template-id',
+      versionNumber: 1,
+      versionName: 'v1.0.0',
+      content: 'Test version content',
+      changelog: 'Initial version',
+      isPublished: true,
+      publishedAt: new Date(),
+      createdAt: new Date(),
+    }),
+  },
 };
 
 export async function createTestApp(): Promise<TestingModule> {
@@ -201,6 +293,12 @@ export async function cleanupDatabase(prisma: PrismaService): Promise<void> {
   } catch (error) {
     // Table might not exist, continue
   }
+  // TODO: Add cleanup for new template versioning entities after database migration
+  // try {
+  //   await prisma.templateVersion.deleteMany();
+  // } catch (error) {
+  //   // Table might not exist, continue
+  // }
 }
 
 export async function initializeTestDatabase(prisma: PrismaService): Promise<void> {

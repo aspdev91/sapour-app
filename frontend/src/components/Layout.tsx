@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Users, BeakerIcon, FileText, Home, LogOut } from 'lucide-react';
+import { Users, BeakerIcon, FileText, Home, LogOut, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
@@ -11,6 +11,7 @@ interface LayoutProps {
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Users', href: '/users', icon: Users },
+  { name: 'Templates', href: '/templates', icon: Edit },
   { name: 'Experiments', href: '/experiments', icon: BeakerIcon },
   { name: 'Reports', href: '/reports', icon: FileText },
 ];

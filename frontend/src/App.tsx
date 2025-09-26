@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import SignIn from './components/SignIn';
 import Home from './routes/Home';
 import UsersRoutes from './routes/users';
+import TemplatesRoutes from './routes/templates';
 import ExperimentsRoutes from './routes/experiments';
 import ReportsRoutes from './routes/reports';
 
@@ -31,6 +32,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/users/*" element={<UsersRoutes />} />
+        <Route path="/templates/*" element={<TemplatesRoutes />} />
         <Route path="/experiments/*" element={<ExperimentsRoutes />} />
         <Route path="/reports/*" element={<ReportsRoutes />} />
       </Routes>

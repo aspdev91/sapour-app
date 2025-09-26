@@ -84,33 +84,68 @@ enum TemplateType {
   friendship_compatibility
 }
 
+enum TemplateStatus {
+  draft
+  published
+  archived
+}
+
 model Template {
-  id                 String       @id @default(uuid()) @db.Uuid
-  templateType       TemplateType @unique
-  externalDocumentId String
-  externalDocumentUrl String
-  createdAt          DateTime     @default(now())
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String
+  type        TemplateType
+  description String?
+  status      TemplateStatus @default(draft)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  revisions   TemplateRevision[]
+  reports     Report[]
+
+  @@unique([type]) // Each template type can only have one template
+  @@index([type])
+  @@index([status])
+}
+
+model TemplateRevision {
+  id            String    @id @default(uuid()) @db.Uuid
+  templateId    String    @db.Uuid
+  revisionNumber Int
+  content       String    @db.Text
+  changelog     String?
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  template      Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  reports       Report[]
+
+  @@unique([templateId, revisionNumber])
+  @@index([templateId, revisionNumber])
+  @@index([templateId, isPublished])
 }
 
 model Report {
-  id                   String       @id @default(uuid()) @db.Uuid
-  reportType           TemplateType
-  primaryUserId        String       @db.Uuid
-  secondaryUserId      String?      @db.Uuid
-  templateType         TemplateType
-  templateDocumentId   String
-  templateRevisionId   String
-  templateRevisionLabel String?
-  aiProviderName       String
-  aiModelName          String
-  content              String       @db.Text
-  createdAt            DateTime     @default(now())
+  id                    String           @id @default(uuid()) @db.Uuid
+  primaryUserId         String           @db.Uuid
+  secondaryUserId       String?          @db.Uuid
+  templateId            String           @db.Uuid
+  templateRevisionId    String           @db.Uuid
+  aiProviderName        String
+  aiModelName           String
+  content               String           @db.Text
+  createdAt             DateTime         @default(now())
 
   // Relations
-  primaryUser          User         @relation("UserPrimaryReports", fields: [primaryUserId], references: [id])
-  secondaryUser        User?        @relation("UserSecondaryReports", fields: [secondaryUserId], references: [id])
+  primaryUser           User             @relation("UserPrimaryReports", fields: [primaryUserId], references: [id])
+  secondaryUser         User?            @relation("UserSecondaryReports", fields: [secondaryUserId], references: [id])
+  template              Template         @relation(fields: [templateId], references: [id])
+  templateRevision      TemplateRevision @relation(fields: [templateRevisionId], references: [id])
 
-  @@index([reportType])
+  @@index([templateId])
   @@index([primaryUserId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
 }
 
