@@ -18,11 +18,13 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   // Enable CORS with configurable origins
-  const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(origin => origin.trim()) || ['http://localhost:3000'];
-  
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',').map((origin) => origin.trim()) || [
+    'http://localhost:3000',
+  ];
+
   // Log CORS configuration for debugging
   console.log('CORS Origins configured:', corsOrigins);
-  
+
   app.enableCors({
     origin: corsOrigins,
     credentials: true,

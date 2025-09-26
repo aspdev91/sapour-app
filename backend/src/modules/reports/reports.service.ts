@@ -6,7 +6,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma.service';
 import OpenAI from 'openai';
-import { TemplatesService, TemplateType } from '../templates/templates.service';
+import { TemplatesService } from '../templates/templates.service';
+import { TemplateType } from '../templates/dto';
 import { MediaService } from '../media/media.service';
 import { z } from 'zod';
 
@@ -124,13 +125,21 @@ export class ReportsService {
       }
     }
 
-    // Get template content
+    // Get template revision content
     let templateContent: string;
     try {
-      templateContent = await this.templatesService.getTemplateContent(
-        validatedData.templateType as TemplateType,
-        validatedData.templateRevisionId,
-      );
+      const templateRevision = await this.prisma.templateRevision.findUnique({
+        where: { id: validatedData.templateRevisionId },
+        include: { template: true },
+      });
+
+      if (!templateRevision) {
+        throw new NotFoundException(
+          `Template revision not found: ${validatedData.templateRevisionId}`,
+        );
+      }
+
+      templateContent = templateRevision.content;
     } catch (error: any) {
       throw new BadRequestException(`Failed to get template content: ${error.message}`);
     }
@@ -173,31 +182,41 @@ export class ReportsService {
       );
     }
 
+    // Get template info for the template ID
+    const template = await this.prisma.template.findFirst({
+      where: { type: validatedData.templateType as TemplateType },
+    });
+
+    if (!template) {
+      throw new NotFoundException(`Template not found for type: ${validatedData.templateType}`);
+    }
+
     // Persist immutable report with full provenance
     const report = await this.prisma.report.create({
       data: {
-        reportType: validatedData.reportType as any,
         primaryUserId: validatedData.primaryUserId,
         secondaryUserId: validatedData.secondaryUserId,
-        templateType: validatedData.templateType as any,
-        templateDocumentId: 'google-doc-id', // Would be actual doc ID in production
+        templateId: template.id,
         templateRevisionId: validatedData.templateRevisionId,
-        templateRevisionLabel: `Revision ${validatedData.templateRevisionId}`,
         aiProviderName: 'OpenAI',
         aiModelName: 'gpt-4',
         content: reportContent,
+      },
+      include: {
+        template: true,
+        templateRevision: true,
       },
     });
 
     return {
       id: report.id,
-      reportType: report.reportType,
+      reportType: report.template.type,
       primaryUserId: report.primaryUserId,
       secondaryUserId: report.secondaryUserId || undefined,
-      templateType: report.templateType,
-      templateDocumentId: report.templateDocumentId,
+      templateType: report.template.type,
+      templateDocumentId: report.template.id,
       templateRevisionId: report.templateRevisionId,
-      templateRevisionLabel: report.templateRevisionLabel || undefined,
+      templateRevisionLabel: `v${report.templateRevision.revisionNumber}`,
       aiProviderName: report.aiProviderName,
       aiModelName: report.aiModelName,
       content: report.content,
@@ -251,6 +270,10 @@ export class ReportsService {
   async getReportById(reportId: string): Promise<ReportDetail> {
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },
+      include: {
+        template: true,
+        templateRevision: true,
+      },
     });
 
     if (!report) {
@@ -259,13 +282,13 @@ export class ReportsService {
 
     return {
       id: report.id,
-      reportType: report.reportType,
+      reportType: report.template.type,
       primaryUserId: report.primaryUserId,
       secondaryUserId: report.secondaryUserId || undefined,
-      templateType: report.templateType,
-      templateDocumentId: report.templateDocumentId,
+      templateType: report.template.type,
+      templateDocumentId: report.template.id,
       templateRevisionId: report.templateRevisionId,
-      templateRevisionLabel: report.templateRevisionLabel || undefined,
+      templateRevisionLabel: `v${report.templateRevision.revisionNumber}`,
       aiProviderName: report.aiProviderName,
       aiModelName: report.aiModelName,
       content: report.content,
@@ -280,17 +303,21 @@ export class ReportsService {
       where,
       orderBy: { createdAt: 'desc' },
       take: limit,
+      include: {
+        template: true,
+        templateRevision: true,
+      },
     });
 
     return reports.map((report) => ({
       id: report.id,
-      reportType: report.reportType,
+      reportType: report.template.type,
       primaryUserId: report.primaryUserId,
       secondaryUserId: report.secondaryUserId || undefined,
-      templateType: report.templateType,
-      templateDocumentId: report.templateDocumentId,
+      templateType: report.template.type,
+      templateDocumentId: report.template.id,
       templateRevisionId: report.templateRevisionId,
-      templateRevisionLabel: report.templateRevisionLabel || undefined,
+      templateRevisionLabel: `v${report.templateRevision.revisionNumber}`,
       aiProviderName: report.aiProviderName,
       aiModelName: report.aiModelName,
       content: report.content,
