@@ -139,7 +139,6 @@ export default function UserDetail() {
       const randomSuffix = Math.random().toString(36).substring(2, 8);
       const bucket = type === 'image' ? 'user-submitted-photos' : 'user-submitted-audio';
       const storagePath = `${userId}/${timestamp}-${randomSuffix}`;
-      const fullPath = `${bucket}/${storagePath}`;
 
       setState((prev) => ({ ...prev, progress: 25 }));
 

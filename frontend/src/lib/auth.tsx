@@ -30,7 +30,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentSessionUserId, setCurrentSessionUserId] = useState<string | null>(null);
   const isCheckingAuthRef = useRef(false);
   const isAuthenticatedRef = useRef(false);
 
@@ -112,10 +111,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('Supabase auth state change:', event, session?.user?.email);
 
       if (event === 'SIGNED_IN' && session && !isAuthenticatedRef.current) {
-        setCurrentSessionUserId(session.user.id);
         await checkAuth();
       } else if (event === 'SIGNED_OUT') {
-        setCurrentSessionUserId(null);
         setUser(null);
         setError(null);
         setLoading(false);
