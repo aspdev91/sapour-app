@@ -6,6 +6,8 @@ services:
       - '3001:3001'
     env_file:
       - ./backend/.env.live
+    environment:
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://your-production-domain.com}
     networks:
       - appnet
     depends_on: []
