@@ -19,9 +19,15 @@ async function bootstrap() {
 
   // Enable CORS with configurable origins
   const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(origin => origin.trim()) || ['http://localhost:3000'];
+  
+  // Log CORS configuration for debugging
+  console.log('CORS Origins configured:', corsOrigins);
+  
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
 
   // Get LoggerService instance from the app context

@@ -16,8 +16,10 @@ export function validateEnvironmentVariables(): void {
     'OPENAI_API_KEY',
     'SENTRY_DSN',
     'PORT',
-    'CORS_ORIGINS',
   ];
+
+  // Optional environment variables with defaults
+  // CORS_ORIGINS defaults to 'http://localhost:3000' if not set
 
   const missingVars: string[] = [];
 
