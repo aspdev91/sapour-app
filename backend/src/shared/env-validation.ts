@@ -16,6 +16,7 @@ export function validateEnvironmentVariables(): void {
     'OPENAI_API_KEY',
     'SENTRY_DSN',
     'PORT',
+    'CORS_ORIGINS',
   ];
 
   const missingVars: string[] = [];
