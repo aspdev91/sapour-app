@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Models will be added in tasks T020–T024
+
+model Admin {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  allowlisted   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  lastActiveAt  DateTime?
+
+  // Relations
+  createdUsers  User[]   @relation("AdminCreatedUsers")
+
+  @@index([email])
+}
+
+model User {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String
+  consent         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  createdByAdminId String   @db.Uuid
+
+  // Relations
+  createdBy       Admin    @relation("AdminCreatedUsers", fields: [createdByAdminId], references: [id])
+  media           Media[]  @relation("UserMedia")
+  primaryReports  Report[] @relation("UserPrimaryReports")
+  secondaryReports Report[] @relation("UserSecondaryReports")
+
+  @@index([createdAt(sort: Desc)])
+}
+
+enum MediaType {
+  image
+  audio
+}
+
+enum MediaStatus {
+  pending
+  processing
+  succeeded
+  failed
+}
+
+enum MediaProvider {
+  openai_vision
+  hume
+}
+
+model Media {
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String       @db.Uuid
+  type         MediaType
+  storagePath  String
+  publicUrl    String?
+  analysisJson Json?
+  provider     MediaProvider?
+  model        String?
+  status       MediaStatus  @default(pending)
+  error        String?
+  createdAt    DateTime     @default(now())
+
+  // Relations
+  user         User         @relation("UserMedia", fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+enum TemplateType {
+  first_impression
+  first_impression_divergence
+  my_type
+  my_type_divergence
+  romance_compatibility
+  friendship_compatibility
+}
+
+model Template {
+  id                 String       @id @default(uuid()) @db.Uuid
+  templateType       TemplateType @unique
+  externalDocumentId String
+  externalDocumentUrl String
+  createdAt          DateTime     @default(now())
+}
+
+model Report {
+  id                   String       @id @default(uuid()) @db.Uuid
+  reportType           TemplateType
+  primaryUserId        String       @db.Uuid
+  secondaryUserId      String?      @db.Uuid
+  templateType         TemplateType
+  templateDocumentId   String
+  templateRevisionId   String
+  templateRevisionLabel String?
+  aiProviderName       String
+  aiModelName          String
+  content              String       @db.Text
+  createdAt            DateTime     @default(now())
+
+  // Relations
+  primaryUser          User         @relation("UserPrimaryReports", fields: [primaryUserId], references: [id])
+  secondaryUser        User?        @relation("UserSecondaryReports", fields: [secondaryUserId], references: [id])
+
+  @@index([reportType])
+  @@index([primaryUserId, createdAt(sort: Desc)])
+}
+

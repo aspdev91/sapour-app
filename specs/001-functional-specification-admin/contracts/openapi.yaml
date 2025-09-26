@@ -1,0 +1,231 @@
+openapi: 3.0.3
+info:
+  title: Sapour Admin API
+  version: 0.1.0
+  description: REST API for admin operations, media management, template revisions, analyses, and report generation.
+servers:
+  - url: http://localhost:3001
+    description: Local NestJS backend
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UUID:
+      type: string
+      format: uuid
+    Timestamp:
+      type: string
+      format: date-time
+    MediaType:
+      type: string
+      enum: [image, audio]
+    ReportType:
+      type: string
+      enum:
+        [
+          first_impression,
+          first_impression_divergence,
+          my_type,
+          my_type_divergence,
+          romance_compatibility,
+          friendship_compatibility,
+        ]
+    User:
+      type: object
+      required: [id, name, consent, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        name: { type: string }
+        consent: { type: boolean }
+        createdAt: { $ref: "#/components/schemas/Timestamp" }
+    Media:
+      type: object
+      required: [id, userId, type, storagePath, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        userId: { $ref: "#/components/schemas/UUID" }
+        type: { $ref: "#/components/schemas/MediaType" }
+        storagePath: { type: string }
+        publicUrl: { type: string }
+        analysisJson:
+          { type: object, additionalProperties: true, nullable: true }
+        provider: { type: string, nullable: true }
+        model: { type: string, nullable: true }
+        status: { type: string, enum: [pending, processing, succeeded, failed] }
+        error: { type: string, nullable: true }
+        createdAt: { $ref: "#/components/schemas/Timestamp" }
+    Report:
+      type: object
+      required: [id, reportType, primaryUserId, content, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/UUID" }
+        reportType: { $ref: "#/components/schemas/ReportType" }
+        primaryUserId: { $ref: "#/components/schemas/UUID" }
+        secondaryUserId: { $ref: "#/components/schemas/UUID" }
+        templateDocumentId: { type: string }
+        templateRevisionId: { type: string }
+        templateRevisionLabel: { type: string }
+        aiProviderName: { type: string }
+        aiModelName: { type: string }
+        content: { type: string }
+        createdAt: { $ref: "#/components/schemas/Timestamp" }
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /auth/allowlist:
+    get:
+      summary: Check if current user is allowlisted
+      responses:
+        "200":
+          description: Allowlist status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email: { type: string }
+                  allowlisted: { type: boolean }
+  /users:
+    get:
+      summary: List users (newest first, paginated)
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Users page
+    post:
+      summary: Create new user with consent true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+  /users/{userId}:
+    get:
+      summary: Get user with media and reports
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: User detail
+  /media/signed-url:
+    post:
+      summary: Create a signed upload URL for Supabase Storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, type, contentType]
+              properties:
+                userId: { $ref: "#/components/schemas/UUID" }
+                type: { $ref: "#/components/schemas/MediaType" }
+                contentType: { type: string }
+      responses:
+        "201":
+          description: Signed URL response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploadUrl: { type: string }
+                  storagePath: { type: string }
+  /media/{mediaId}/analysis:
+    post:
+      summary: Trigger analysis for media (Hume for audio, OpenAI for image)
+      parameters:
+        - in: path
+          name: mediaId
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "202":
+          description: Analysis started
+  /templates/{templateType}/revisions:
+    get:
+      summary: List Google Doc revisions for a template type
+      parameters:
+        - in: path
+          name: templateType
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Revisions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  revisions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        label: { type: string }
+                        createdAt: { $ref: "#/components/schemas/Timestamp" }
+  /reports:
+    post:
+      summary: Generate a report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                [reportType, primaryUserId, templateType, templateRevisionId]
+              properties:
+                reportType: { $ref: "#/components/schemas/ReportType" }
+                primaryUserId: { $ref: "#/components/schemas/UUID" }
+                secondaryUserId: { $ref: "#/components/schemas/UUID" }
+                templateType: { type: string }
+                templateRevisionId: { type: string }
+                selfObservedDifferences: { type: string }
+      responses:
+        "201":
+          description: Report created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Report" }
+  /reports/{reportId}:
+    get:
+      summary: Get a report (read-only)
+      parameters:
+        - in: path
+          name: reportId
+          required: true
+          schema: { $ref: "#/components/schemas/UUID" }
+      responses:
+        "200":
+          description: Report
