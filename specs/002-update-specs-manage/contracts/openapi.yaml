@@ -1,0 +1,240 @@
+openapi: 3.0.3
+info:
+  title: Sapour Admin Templates API
+  version: 0.1.0
+servers:
+  - url: http://localhost:3001
+paths:
+  /api/templates:
+    get:
+      summary: List templates
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+    post:
+      summary: Create template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTemplateRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+  /api/templates/{id}:
+    get:
+      summary: Get template by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+    patch:
+      summary: Update draft template metadata/content
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTemplateRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+    delete:
+      summary: Archive template
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Archived
+  /api/templates/{id}/publish:
+    post:
+      summary: Publish draft to new TemplateVersion
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishTemplateRequest'
+      responses:
+        '201':
+          description: Published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateVersion'
+  /api/templates/{id}/versions:
+    get:
+      summary: List versions for a template
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TemplateVersion'
+  /api/templates/{id}/versions/{versionNumber}/revert:
+    post:
+      summary: Revert template to a prior published version
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: versionNumber
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Reverted (new published version created equal to selected)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateVersion'
+  /api/report-generation/default-template-version:
+    get:
+      summary: Resolve default template version for a given TemplateType
+      parameters:
+        - in: query
+          name: templateType
+          required: true
+          schema:
+            $ref: '#/components/schemas/TemplateType'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateVersion'
+
+components:
+  schemas:
+    TemplateType:
+      type: string
+      enum: [first_impression, first_impression_divergence, my_type, my_type_divergence, romance_compatibility, friendship_compatibility]
+    Template:
+      type: object
+      required: [id, templateType, name, status, createdAt]
+      properties:
+        id:
+          type: string
+        templateType:
+          $ref: '#/components/schemas/TemplateType'
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [draft, published, archived]
+        latestPublishedVersionId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    TemplateVersion:
+      type: object
+      required: [id, templateId, versionNumber, content, createdAt]
+      properties:
+        id:
+          type: string
+        templateId:
+          type: string
+        versionNumber:
+          type: integer
+        content:
+          type: string
+        changeSummary:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    CreateTemplateRequest:
+      type: object
+      required: [templateType, name]
+      properties:
+        templateType:
+          $ref: '#/components/schemas/TemplateType'
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+          description: Initial draft content (plain text)
+    UpdateTemplateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+          description: Draft content (plain text)
+    PublishTemplateRequest:
+      type: object
+      required: [changeSummary]
+      properties:
+        changeSummary:
+          type: string
